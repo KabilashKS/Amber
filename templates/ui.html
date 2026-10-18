@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMBER Research AI</title>
+    
+    <!-- Icons, Fonts & Markdown Parser -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Iceland&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        :root {
+            var(--glass-bg): rgba(25, 25, 28, 0.4); 
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --accent-glow: 0 0 20px rgba(45, 212, 191, 0.15);
+            --primary-color: #2dd4bf; 
+            --text-main: #cccccc;
+            --text-bright: #ffffff;
+            --text-muted: #858585;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0b0f19 0%, #1a1625 50%, #0d1423 100%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .glass-panel {
+            background: rgba(25, 25, 28, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            font-size: 0.9rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* ChatGPT-style Shrunk Sidebar Rail (shows Logo + Quick Icons on the left) */
+        .sidebar.collapsed {
+            width: 68px;
+            min-width: 68px;
+            padding: 16px 10px;
+            align-items: center;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px;}
+
+        /* Header Alignment */
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            color: var(--text-muted);
+            width: 100%;
+        }
+        .sidebar.collapsed .sidebar-header {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center; 
+            gap: 0px; /* Resetting gap */
+            cursor: pointer;
+        }
+        .sidebar.collapsed .header-left {
+            justify-content: center;
+            padding: 6px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .sidebar.collapsed .header-left:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-header .logo-img {
+            width: 26px; /* Increased slightly to reach the top of the 'M' */
+            height: 26px;
+            object-fit: contain;
+            margin-right: 0px; /* Fine-tuning spacing to match natural kerning */
+            transform: translateY(0px); /* Adjusted so the bottom stays perfectly flush while the top stretches up */
+            filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25));
+            transition: transform 0.2s;
+        }
+        .sidebar.collapsed .sidebar-header .logo-img {
+            width: 30px;
+            height: 30px;
+        }
+
+        .sidebar-header .logo-text {
+            font-family: 'Iceland', cursive;
+            font-size: 2.0rem; /* Scaled down slightly to match the 28px logo */
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-bright);
+            line-height: 1;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .header-icon-btn:hover:not(.disabled) {
+            color: var(--text-bright);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .header-icon-btn.disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        /* Hide text & expanded sections when sidebar is shrunk into ChatGPT rail */
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed #nav-back-btn,
+        .sidebar.collapsed #nav-forward-btn,
+        .sidebar.collapsed .sidebar-text,
+        .sidebar.collapsed .section-header,
+        .sidebar.collapsed #projects-list,
+        .sidebar.collapsed #conversations-list {
+            display: none !important;
+        }
+
+        .new-chat-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.06); color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px;
+            border-radius: 6px; cursor: pointer; margin-bottom: 12px; transition: 0.2s;
+            width: 100%;
+        }
+        .new-chat-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-bright); }
+        .sidebar.collapsed .new-chat-btn {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .menu-item, .project-item, .conv-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 7px 8px; color: var(--text-main); cursor: pointer;
+            border-radius: 6px; margin-bottom: 4px;
+            width: 100%;
+        }
+        .menu-item:hover, .project-item:hover, .conv-item:hover { background: var(--glass-highlight); color: var(--text-bright); }
+        .menu-item.active-tab { background: rgba(255, 255, 255, 0.08); color: var(--text-bright); }
+        .menu-item i { color: var(--text-muted); width: 16px; text-align: center; }
+        .sidebar.collapsed .menu-item {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+        /* ChatGPT Modals (Search Modal & Create/Edit Project Modal) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(8, 10, 16, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.15s ease;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .chatgpt-modal {
+            width: 560px;
+            max-width: 92vw;
+            background: rgba(24, 25, 32, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .search-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .search-modal-header i {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .search-modal-header input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-bright);
+            font-size: 1rem;
+        }
+        .search-modal-header input::placeholder {
+            color: var(--text-muted);
+        }
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: 0.15s;
+        }
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-bright);
+        }
+        .search-modal-body {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .search-modal-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.92rem;
+        }
+        .search-modal-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-bright);
+        }
+        .search-modal-item i {
+            color: var(--text-muted);
+            width: 18px;
+            text-align: center;
+        }
+        .search-section-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 8px 12px 4px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Create/Edit Project Modal */
+        .project-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-bright);
+        }
+        .project-modal-body {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .project-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .project-form-group label {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .project-form-group input,
+        .project-form-group textarea {
+            background: rgba(15, 16, 22, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-bright);
+            font-size: 0.92rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .project-form-group input:focus,
+        .project-form-group textarea:focus {
+            border-color: var(--primary-color);
+        }
+        .project-form-group textarea {
+            min-height: 90px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .project-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Sidebar Projects Tree */
+        .project-group {
+            margin-bottom: 4px;
+        }
+        .project-item {
+            justify-content: space-between;
+        }
+        .project-item.active {
+            background: rgba(45, 212, 191, 0.1);
+            color: var(--text-bright);
+            border-left: 3px solid var(--primary-color);
+        }
+        .project-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .project-item-left span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .project-item-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: 0.15s;
+        }
+        .project-item:hover .project-item-actions {
+            opacity: 1;
+        }
+        .project-item-actions i {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 3px;
+        }
+        .project-item-actions i:hover {
+            color: var(--text-bright);
+        }
+        .project-nested-chats {
+            padding-left: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+        }
+        .project-nested-chats.expanded {
+            display: flex;
+        }
+        .project-nested-chat-item {
+            padding: 5px 8px;
+            font-size: 0.83rem;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: 0.15s;
+        }
+        .project-nested-chat-item:hover,
+        .project-nested-chat-item.active {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-bright);
+        }
+
+        /* ChatGPT Project Workspace View (Main Area) */
+        .project-workspace {
+            max-width: 760px;
+            width: 100%;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            animation: fadeIn 0.25s ease;
+        }
+        .project-workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .project-workspace-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .project-workspace-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: rgba(45, 212, 191, 0.12);
+            border: 1px solid rgba(45, 212, 191, 0.3);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .project-workspace-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .project-btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .project-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-bright);
+        }
+        .project-chat-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .project-chat-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(45, 212, 191, 0.3);
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--text-muted); font-size: 0.8rem; margin-top: 20px; margin-bottom: 8px; padding: 0 4px;
+        }
+        .section-header-actions { display: flex; gap: 10px; align-items: center; }
+        .section-header-actions i { cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
+        .section-header-actions i:hover { color: var(--text-bright); }
+        
+        .conv-item { justify-content: flex-start; transition: 0.2s; }
+        .conv-item.active { background: rgba(45, 212, 191, 0.1); color: var(--text-bright); border-left: 3px solid var(--primary-color); }
+        .conv-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+        /* --- MAIN CHAT AREA --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; }
+
+        .chat-container {
+            flex: 1; overflow-y: auto; padding: 40px; 
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        .message-wrapper { display: flex; max-width: 85%; }
+        .message-wrapper.user { align-self: flex-end; }
+        .message-wrapper.ai { align-self: flex-start; }
+
+        .message-bubble { padding: 14px 20px; border-radius: 18px; line-height: 1.6; font-size: 0.95rem; color: var(--text-bright); }
+        .message-wrapper.ai .message-bubble { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(45, 212, 191, 0.15); border-top-left-radius: 4px; box-shadow: var(--accent-glow); }
+        .message-wrapper.user .message-bubble { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.05); border-top-right-radius: 4px; }
+
+        /* Markdown Typography Inside Message Bubbles (ChatGPT Style) */
+        .message-bubble h1, .message-bubble h2, .message-bubble h3, .message-bubble h4 {
+            color: var(--text-bright);
+            margin-top: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+        .message-bubble h1 { font-size: 1.3rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+        .message-bubble h2 { font-size: 1.15rem; color: #5eead4; }
+        .message-bubble h3 { font-size: 1.02rem; }
+        .message-bubble p {
+            margin-bottom: 10px;
+            line-height: 1.65;
+        }
+        .message-bubble p:last-child {
+            margin-bottom: 0;
+        }
+        .message-bubble ul, .message-bubble ol {
+            margin: 8px 0 12px 22px;
+            padding-left: 0;
+        }
+        .message-bubble li {
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+        .message-bubble strong {
+            color: var(--text-bright);
+            font-weight: 600;
+        }
+        .message-bubble code {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            font-family: monospace;
+            color: #5eead4;
+        }
+        .message-bubble pre {
+            background: rgba(10, 12, 16, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .message-bubble blockquote {
+            border-left: 3px solid var(--primary-color);
+            margin: 10px 0;
+            padding: 6px 14px;
+            color: var(--text-muted);
+            background: rgba(45, 212, 191, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        .chatgpt-cursor {
+            display: inline-block;
+            width: 7px;
+            height: 15px;
+            background-color: var(--primary-color);
+            vertical-align: text-bottom;
+            margin-left: 3px;
+            border-radius: 1px;
+            animation: chatgptBlink 0.8s infinite;
+        }
+        @keyframes chatgptBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .message-bubble table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+        .message-bubble th, .message-bubble td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .message-bubble th {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-bright);
+        }
+
+        /* Clickable Base Paper & Source URLs */
+        .message-bubble a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: 0.2s;
+            word-break: break-word;
+        }
+        .message-bubble a:hover {
+            color: #99f6e4;
+            text-shadow: 0 0 8px rgba(45, 212, 191, 0.5);
+        }
+
+        /* Interactive Related Topics Section (ChatGPT Style) */
+        .related-topics-container {
+            margin-top: 14px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(45, 212, 191, 0.3);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        .related-topics-title {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .related-topics-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .topic-chip {
+            background: rgba(45, 212, 191, 0.08);
+            border: 1px solid rgba(45, 212, 191, 0.22);
+            color: var(--text-bright);
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.3;
+        }
+        .topic-chip:hover {
+            background: rgba(45, 212, 191, 0.2);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 12px rgba(45, 212, 191, 0.25);
+        }
+        .topic-chip i {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        /* Actions & Inline Edit (ChatGPT Style) */
+        .message-content-wrapper { display: flex; flex-direction: column; max-width: 100%; }
+        .message-wrapper.user .message-content-wrapper { align-items: flex-end; }
+        .message-wrapper.ai .message-content-wrapper { align-items: flex-start; }
+
+        .message-actions {
+            display: flex; gap: 4px; margin-top: 4px; opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        .message-wrapper:hover .message-actions,
+        .message-wrapper.ai .message-actions { opacity: 1; }
+
+        .action-btn {
+            background: transparent; border: none;
+            color: var(--text-muted); border-radius: 8px; padding: 6px;
+            cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .action-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-bright); }
+        .action-btn.copied { color: var(--primary-color); }
+
+        .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 320px; }
+        .edit-textarea {
+            width: 100%; min-height: 70px; background: rgba(18, 18, 22, 0.85);
+            border: 1px solid rgba(45, 212, 191, 0.4); border-radius: 12px; color: var(--text-bright);
+            padding: 12px; font-size: 0.95rem; line-height: 1.5; resize: vertical; outline: none; box-sizing: border-box;
+        }
+        .edit-btn-group { display: flex; justify-content: flex-end; gap: 8px; }
+        .edit-cancel-btn {
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted); padding: 6px 14px; border-radius: 14px; cursor: pointer; font-size: 0.8rem; transition: 0.2s;
+        }
+        .edit-cancel-btn:hover { color: var(--text-bright); background: rgba(255, 255, 255, 0.15); }
+        .edit-save-btn {
+            background: linear-gradient(135deg, #2dd4bf, #3b82f6); border: none; color: white;
+            padding: 6px 14px; border-radius: 14px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s;
+        }
+        .edit-save-btn:hover { box-shadow: 0 0 10px rgba(45, 212, 191, 0.4); }
+
+        /* --- INPUT AREA --- */
+        .input-container {
+            margin: 0 40px 32px 40px; padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+            border-radius: 24px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-container input {
+            flex: 1; background: transparent; border: none; outline: none; color: var(--text-bright); font-size: 1rem; padding: 8px;
+        }
+        
+        /* STANDARD PLACEHOLDER (Reverted to single color/font as requested) */
+        .input-container input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .icon-btn {
+            background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+            padding: 8px; border-radius: 50%; transition: 0.2s; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { color: var(--text-bright); background: rgba(255,255,255,0.1); }
+
+        /* Antigravity Model Selector */
+        .antigravity-model-picker {
+            position: relative;
+            display: inline-flex;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .antigravity-model-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-bright);
+            font-size: 0.84rem;
+            font-weight: 500;
+        }
+        .antigravity-model-btn:hover {
+            background: rgba(255, 255, 255, 0.11);
+            border-color: rgba(45, 212, 191, 0.4);
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.18);
+        }
+        .antigravity-model-btn .sparkle-icon {
+            color: #76b900;
+            font-size: 0.85rem;
+            transition: color 0.2s ease;
+        }
+        .antigravity-model-btn .chevron {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+        .antigravity-model-picker.open .chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Antigravity Model Dropdown Popover */
+        .antigravity-model-menu {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 0;
+            width: 350px;
+            max-width: 90vw;
+            max-height: 400px;
+            background: #14161f;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px) scale(0.97);
+            pointer-events: none;
+            transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.18s;
+        }
+        .antigravity-model-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .model-menu-header {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .model-menu-header span {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .model-menu-list {
+            overflow-y: auto;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 360px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .model-menu-list::-webkit-scrollbar {
+            display: none;
+        }
+        .model-menu-group-title {
+            padding: 8px 12px 4px 12px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .model-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .model-menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .model-menu-item.selected {
+            background: rgba(255, 255, 255, 0.09);
+        }
+        .model-menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .model-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .model-item-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #f1f5f9;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .model-item-context {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .model-menu-item-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* Antigravity Single Color Badge */
+        .model-badge {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+        .model-menu-item:hover .model-badge {
+            color: #cbd5e1;
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+        .model-menu-check {
+            color: #e2e8f0;
+            font-size: 0.78rem;
+            visibility: hidden;
+            width: 14px;
+            text-align: center;
+        }
+        .model-menu-item.selected .model-menu-check {
+            visibility: visible;
+        }
+
+        /* Send & Stop Button (Antigravity Style) */
+        .send-btn {
+            background: linear-gradient(135deg, #2dd4bf, #3b82f6); color: white; border: none;
+            padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 500;
+            display: flex; align-items: center; gap: 8px; transition: 0.2s; font-size: 0.95rem;
+        }
+        .send-btn:hover { box-shadow: 0 0 15px rgba(45, 212, 191, 0.4); transform: translateY(-1px); }
+        .send-btn.stop-btn {
+            background: rgba(239, 68, 68, 0.22) !important;
+            border: 1px solid rgba(239, 68, 68, 0.6) !important;
+            color: #f87171 !important;
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.3) !important;
+            animation: pulseStop 1.8s infinite ease-in-out;
+        }
+        .send-btn.stop-btn:hover {
+            background: rgba(239, 68, 68, 0.38) !important;
+            border-color: #ef4444 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+        }
+        @keyframes pulseStop {
+            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.25); }
+            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.55); }
+        }
+
+        /* Report Approval Card in UI */
+        .report-approval-card {
+            margin-top: 14px;
+            background: rgba(15, 17, 24, 0.7);
+            border: 1px solid rgba(45, 212, 191, 0.25);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+        .approval-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .approval-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary-color);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .approval-note {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .approval-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .approve-pdf-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .approve-pdf-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+        }
+        .revise-report-btn {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .revise-report-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-bright);
+        }
+        .revision-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .revision-box textarea {
+            width: 100%;
+            min-height: 70px;
+            background: rgba(10, 11, 16, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            color: var(--text-bright);
+            padding: 10px;
+            font-size: 0.88rem;
+            outline: none;
+            resize: vertical;
+        }
+        .revision-box textarea:focus {
+            border-color: var(--primary-color);
+        }
+        .revision-btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .revision-btn-group button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cancel-revision-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+        .cancel-revision-btn:hover {
+            color: var(--text-bright);
+        }
+        .submit-revision-btn {
+            background: var(--primary-color);
+            border: none;
+            color: #0b0f19;
+            font-weight: 600;
+        }
+        .pdf-ready-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px 14px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+        }
+        .pdf-ready-title {
+            color: #34d399;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .download-pdf-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #2dd4bf, #3b82f6);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: 0.2s;
+            width: fit-content;
+        }
+        .download-pdf-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(45, 212, 191, 0.4);
+        }
+        
+        .pdf-direct-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 12px;
+            margin-top: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-out;
+            flex-wrap: wrap;
+        }
+        .pdf-direct-card .pdf-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .pdf-direct-card .pdf-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .pdf-direct-card .pdf-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-bright);
+        }
+        .pdf-direct-card .pdf-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar glass-panel" id="app-sidebar">
+        
+        <div class="sidebar-header">
+            <!-- PERFECTLY ALIGNED LOGO + MBER -->
+            <div class="header-left" id="sidebar-brand-logo" title="AMBER Research AI">
+                <img src="/api/research/logo" onerror="this.onerror=null;this.src='/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png';" class="logo-img" alt="AMBER">
+                <span class="logo-text">MBER</span>
+            </div>
+            <div class="header-right">
+                <button class="header-icon-btn" id="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+                <button class="header-icon-btn disabled" id="nav-back-btn" title="Previous Conversation">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button class="header-icon-btn disabled" id="nav-forward-btn" title="Next Conversation">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="new-chat-btn" title="New Conversation"><i class="fa-solid fa-plus"></i> <span class="sidebar-text">New Conversation</span></div>
+        <div class="menu-item" id="history-tab-btn" title="Search Chats (Ctrl+K)"><i class="fa-solid fa-magnifying-glass"></i> <span class="sidebar-text">Search Chats</span></div>
+        
+        <div class="section-header">
+            <span>Projects</span>
+            <div class="section-header-actions">
+                <i class="fa-solid fa-folder-plus" id="create-project-icon-btn" title="Create Project"></i>
+            </div>
+        </div>
+        <div id="projects-list">
+            <!-- Projects from PostgreSQL will appear here -->
+        </div>
+
+        <div class="section-header">
+            <span>Conversations</span>
+            <div class="section-header-actions">
+                <i class="fa-solid fa-plus" id="section-new-chat-btn" title="New Conversation"></i>
+            </div>
+        </div>
+        <div id="conversations-list">
+            <!-- Real chats from PostgreSQL will appear here -->
+        </div>
+    </aside>
+
+    <!-- ChatGPT Search Chats Modal -->
+    <div class="modal-overlay" id="search-modal-overlay">
+        <div class="chatgpt-modal">
+            <div class="search-modal-header">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="modal-search-input" placeholder="Search chats...">
+                <button class="modal-close-btn" id="close-search-modal-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="search-modal-body" id="search-modal-results">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ChatGPT Create / Edit Project Modal -->
+    <div class="modal-overlay" id="project-modal-overlay">
+        <div class="chatgpt-modal">
+            <div class="project-modal-header">
+                <span id="project-modal-title">Create project</span>
+                <button class="modal-close-btn" id="close-project-modal-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="project-modal-body">
+                <div class="project-form-group">
+                    <label for="project-name-input">Project name</label>
+                    <input type="text" id="project-name-input" placeholder="e.g. EV Battery Research">
+                </div>
+                <div class="project-form-group">
+                    <label for="project-instructions-input">Custom instructions (optional)</label>
+                    <textarea id="project-instructions-input" placeholder="What should AMBER know or focus on in this project?"></textarea>
+                </div>
+            </div>
+            <div class="project-modal-footer">
+                <button class="edit-cancel-btn" id="cancel-project-modal-btn">Cancel</button>
+                <button class="edit-save-btn" id="save-project-modal-btn">Create project</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content glass-panel">
+        <div class="chat-container"></div>
+
+        <!-- Antigravity-Style Prompt Box with Model Picker & Send/Stop Control -->
+        <div class="input-container">
+            <div class="antigravity-model-picker" id="antigravity-model-picker">
+                <div class="antigravity-model-btn" id="model-picker-btn" title="Select AI Model">
+                    <i class="fa-solid fa-wand-magic-sparkles sparkle-icon" id="model-picker-icon"></i>
+                    <span id="model-display-name">Llama 3.2 11B Vision</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </div>
+                <div class="antigravity-model-menu" id="antigravity-model-menu">
+                    <div class="model-menu-header">
+                        <span>Model</span>
+                    </div>
+                    <div class="model-menu-list" id="model-menu-list">
+                        <!-- Populated dynamically via JS with Antigravity-style badges & groups -->
+                    </div>
+                </div>
+                <input type="hidden" id="selected-model-id" value="nvidia_llama">
+            </div>
+            <input type="text" id="chat-input" placeholder="Ask AMBER...">
+            <button class="send-btn" id="send-btn" title="Send research prompt">Send <i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById('app-sidebar');
+            const sidebarBrandLogo = document.getElementById('sidebar-brand-logo');
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const navBackBtn = document.getElementById('nav-back-btn');
+            const navForwardBtn = document.getElementById('nav-forward-btn');
+            const sectionNewChatBtn = document.getElementById('section-new-chat-btn');
+            const conversationsList = document.getElementById('conversations-list');
+            const chatContainer = document.querySelector('.chat-container');
+            const newChatBtn = document.querySelector('.new-chat-btn');
+            const inputField = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            // Antigravity Model Picker Elements
+            const modelPicker = document.getElementById('antigravity-model-picker');
+            const modelPickerBtn = document.getElementById('model-picker-btn');
+            const modelMenu = document.getElementById('antigravity-model-menu');
+            const modelMenuList = document.getElementById('model-menu-list');
+            const modelDisplayName = document.getElementById('model-display-name');
+            const modelPickerIcon = document.getElementById('model-picker-icon');
+            const selectedModelInput = document.getElementById('selected-model-id');
+
+            const MODEL_CATALOG = [
+                { id: "meta_muse", name: "Muse 30B", provider: "nvidia", tier: "Fast", context: "Fast · Quick creative & technical research" },
+                { id: "nvidia_llama", name: "Llama 3.2 11B Vision", provider: "nvidia", tier: "Light", context: "Light · Multimodal vision & efficient retrieval" },
+                { id: "nvidia_nemotron_lightning", name: "Nemotron 30B Lightning", provider: "nvidia", tier: "Fast", context: "Fast · Sub-second rapid search synthesis" },
+                { id: "openai_gpt_oss", name: "GPT-OSS 20B", provider: "nvidia", tier: "Light", context: "Light · Open architecture knowledge core" },
+                { id: "nvidia_deepseek", name: "DeepSeek V4.1 Flash", provider: "nvidia", tier: "Medium", context: "Medium · Complex logic & scientific deduction" },
+                { id: "google_gemma4", name: "Gemma 4 31B IT", provider: "nvidia", tier: "Medium", context: "Medium · High-accuracy reasoning & citations" },
+                { id: "nvidia_nemotron_super", name: "Nemotron 120B Super", provider: "nvidia", tier: "Medium", context: "Medium · Balanced multi-domain analysis" },
+                { id: "moonshot_kimi", name: "Moonshot Kimi K3", provider: "nvidia", tier: "Heavy", context: "Heavy · Massive context & deep literature memory" },
+                { id: "nvidia_nemotron_ultra", name: "Nemotron 550B Ultra", provider: "nvidia", tier: "Heavy", context: "Heavy · Frontier enterprise research intelligence" },
+                { id: "gemini", name: "Gemini 1.5 Flash", provider: "google", tier: "Fast", context: "Fast · Cloud sub-second real-time streaming" }
+            ];
+
+            function renderAntigravityModelMenu(models) {
+                if (!modelMenuList) return;
+                modelMenuList.innerHTML = '';
+                const groups = {
+                    nvidia: { title: "NVIDIA NIM Cloud", items: [] },
+                    google: { title: "Google Cloud", items: [] }
+                };
+
+                models.forEach(m => {
+                    const grp = groups[m.provider] || groups.nvidia;
+                    grp.items.push(m);
+                });
+
+                Object.values(groups).forEach(g => {
+                    if (g.items.length === 0) return;
+                    const groupTitle = document.createElement('div');
+                    groupTitle.className = 'model-menu-group-title';
+                    groupTitle.textContent = g.title;
+                    modelMenuList.appendChild(groupTitle);
+
+                    g.items.forEach(m => {
+                        const isSelected = (selectedModelInput.value === m.id);
+                        const row = document.createElement('div');
+                        row.className = 'model-menu-item' + (isSelected ? ' selected' : '');
+                        row.innerHTML = `
+                            <div class="model-menu-item-left">
+                                <div class="model-item-info">
+                                    <div class="model-item-title">${escapeHtml(m.name)}</div>
+                                    <div class="model-item-context">${escapeHtml(m.context || m.desc || '')}</div>
+                                </div>
+                            </div>
+                            <div class="model-menu-item-right">
+                                <span class="model-badge">${escapeHtml(m.tier || m.badge || 'Fast')}</span>
+                                <i class="fa-solid fa-check model-menu-check"></i>
+                            </div>
+                        `;
+                        row.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            selectAntigravityModel(m);
+                        });
+                        modelMenuList.appendChild(row);
+                    });
+                });
+            }
+
+            function selectAntigravityModel(m) {
+                selectedModelInput.value = m.id;
+                modelDisplayName.textContent = m.name;
+                modelPicker.classList.remove('open');
+                modelMenu.classList.remove('open');
+                renderAntigravityModelMenu(MODEL_CATALOG);
+            }
+
+            if (modelPickerBtn && modelMenu) {
+                modelPickerBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = modelMenu.classList.contains('open');
+                    if (isOpen) {
+                        modelPicker.classList.remove('open');
+                        modelMenu.classList.remove('open');
+                    } else {
+                        modelPicker.classList.add('open');
+                        modelMenu.classList.add('open');
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (modelPicker && !modelPicker.contains(e.target)) {
+                        modelPicker.classList.remove('open');
+                        modelMenu.classList.remove('open');
+                    }
+                });
+
+                renderAntigravityModelMenu(MODEL_CATALOG);
+
+                async function syncServerModels() {
+                    try {
+                        const res = await fetch('/api/research/models');
+                        if (res.ok) {
+                            const serverModels = await res.json();
+                            serverModels.forEach(sm => {
+                                if (!MODEL_CATALOG.find(m => m.id === sm.id)) {
+                                    MODEL_CATALOG.push({
+                                        id: sm.id,
+                                        name: sm.name,
+                                        provider: sm.provider,
+                                        badge: sm.provider === 'ollama' ? 'Local Fast' : 'Cloud'
+                                    });
+                                }
+                            });
+                            renderAntigravityModelMenu(MODEL_CATALOG);
+                        }
+                    } catch (err) {
+                        console.log('Model sync notice:', err);
+                    }
+                }
+                syncServerModels();
+            }
+
+            // Search Modal DOM Elements
+            const historyTabBtn = document.getElementById('history-tab-btn');
+            const searchModalOverlay = document.getElementById('search-modal-overlay');
+            const modalSearchInput = document.getElementById('modal-search-input');
+            const closeSearchModalBtn = document.getElementById('close-search-modal-btn');
+            const searchModalResults = document.getElementById('search-modal-results');
+
+            // Projects DOM Elements
+            const createProjectIconBtn = document.getElementById('create-project-icon-btn');
+            const newProjectMenuBtn = document.getElementById('new-project-menu-btn');
+            const projectsList = document.getElementById('projects-list');
+            const projectModalOverlay = document.getElementById('project-modal-overlay');
+            const projectModalTitle = document.getElementById('project-modal-title');
+            const closeProjectModalBtn = document.getElementById('close-project-modal-btn');
+            const cancelProjectModalBtn = document.getElementById('cancel-project-modal-btn');
+            const saveProjectModalBtn = document.getElementById('save-project-modal-btn');
+            const projectNameInput = document.getElementById('project-name-input');
+            const projectInstructionsInput = document.getElementById('project-instructions-input');
+
+            let activeConversationId = null;
+            let activeProjectId = null;
+            let editingProjectId = null;
+            let expandedProjectIds = new Set();
+            let allConversationsCache = [];
+            let allProjectsCache = [];
+            let navHistory = [];
+            let navHistoryIndex = -1;
+
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function updateInputPlaceholder() {
+                if (activeProjectId !== null) {
+                    const proj = allProjectsCache.find(p => p.id === activeProjectId);
+                    if (proj) {
+                        inputField.placeholder = `New chat in ${proj.name}...`;
+                        return;
+                    }
+                }
+                inputField.placeholder = "Ask AMBER...";
+            }
+
+            // --- SIDEBAR COLLAPSE / EXPAND TOGGLE (ChatGPT Left Rail Style) ---
+            function toggleSidebar(collapse) {
+                const shouldCollapse = typeof collapse === 'boolean' ? collapse : !sidebar.classList.contains('collapsed');
+                if (shouldCollapse) {
+                    sidebar.classList.add('collapsed');
+                    sidebarToggleBtn.title = "Expand Sidebar";
+                    if (sidebarBrandLogo) sidebarBrandLogo.title = "Expand Sidebar";
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    sidebarToggleBtn.title = "Collapse Sidebar";
+                    if (sidebarBrandLogo) sidebarBrandLogo.title = "AMBER Research AI";
+                }
+            }
+            sidebarToggleBtn.addEventListener('click', () => toggleSidebar());
+            if (sidebarBrandLogo) {
+                sidebarBrandLogo.addEventListener('click', () => {
+                    if (sidebar.classList.contains('collapsed')) {
+                        toggleSidebar(false);
+                    } else {
+                        startNewGeneralChat();
+                    }
+                });
+            }
+
+            // --- BACK / FORWARD CONVERSATION NAVIGATION ---
+            function updateNavButtons() {
+                navBackBtn.classList.toggle('disabled', navHistoryIndex <= 0);
+                navForwardBtn.classList.toggle('disabled', navHistoryIndex >= navHistory.length - 1);
+            }
+
+            function pushToNavHistory(convId, title) {
+                if (navHistoryIndex >= 0 && navHistory[navHistoryIndex].id === convId) return;
+                navHistory = navHistory.slice(0, navHistoryIndex + 1);
+                navHistory.push({ id: convId, title: title });
+                navHistoryIndex = navHistory.length - 1;
+                updateNavButtons();
+            }
+
+            navBackBtn.addEventListener('click', () => {
+                if (navHistoryIndex > 0) {
+                    navHistoryIndex--;
+                    const target = navHistory[navHistoryIndex];
+                    activeConversationId = target.id;
+                    renderFilteredConversations();
+                    renderProjectsSidebar();
+                    loadConversationMessages(target.id, target.title);
+                    updateNavButtons();
+                }
+            });
+
+            navForwardBtn.addEventListener('click', () => {
+                if (navHistoryIndex < navHistory.length - 1) {
+                    navHistoryIndex++;
+                    const target = navHistory[navHistoryIndex];
+                    activeConversationId = target.id;
+                    renderFilteredConversations();
+                    renderProjectsSidebar();
+                    loadConversationMessages(target.id, target.title);
+                    updateNavButtons();
+                }
+            });
+
+            function showWelcomeScreen() {
+                updateInputPlaceholder();
+                chatContainer.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 20px; animation: fadeIn 0.3s;">
+                        <img src="/api/research/logo" onerror="this.onerror=null;this.src='/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png';" style="width: 72px; height: 72px; opacity: 0.8; filter: drop-shadow(0 0 10px rgba(45,212,191,0.3));" alt="AMBER">
+                        <h2 style="color: var(--text-bright); font-family: 'Iceland', cursive; font-size: 2.5rem; font-weight: normal; margin: 0;">AMBER</h2>
+                        <p style="font-size: 1.1rem;">How can I help you with your research today?</p>
+                    </div>
+                `;
+            }
+
+            function startNewGeneralChat() {
+                activeConversationId = null;
+                activeProjectId = null;
+                updateInputPlaceholder();
+                renderFilteredConversations();
+                renderProjectsSidebar();
+                showWelcomeScreen();
+                inputField.focus();
+            }
+
+            // --- CHATGPT SEARCH MODAL WORKFLOW ---
+            function openSearchModal() {
+                searchModalOverlay.classList.add('open');
+                modalSearchInput.value = '';
+                renderSearchModalResults();
+                setTimeout(() => modalSearchInput.focus(), 50);
+            }
+
+            function closeSearchModal() {
+                searchModalOverlay.classList.remove('open');
+            }
+
+            function renderSearchModalResults() {
+                const query = (modalSearchInput.value || '').trim().toLowerCase();
+                searchModalResults.innerHTML = '';
+
+                // "+ New chat" quick action at top (ChatGPT Search Modal pattern)
+                const newChatRow = document.createElement('div');
+                newChatRow.className = 'search-modal-item';
+                newChatRow.innerHTML = `
+                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i>
+                    <span style="color: var(--text-bright); font-weight: 500;">New chat</span>
+                `;
+                newChatRow.addEventListener('click', () => {
+                    closeSearchModal();
+                    startNewGeneralChat();
+                });
+                searchModalResults.appendChild(newChatRow);
+
+                // Filter conversations
+                const filtered = allConversationsCache.filter(c => (c.title || '').toLowerCase().includes(query));
+
+                const label = document.createElement('div');
+                label.className = 'search-section-label';
+                label.textContent = query ? `Matching Chats (${filtered.length})` : 'Recent Conversations';
+                searchModalResults.appendChild(label);
+
+                if (filtered.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'padding: 16px 12px; color: var(--text-muted); font-size: 0.88rem; text-align: center;';
+                    empty.textContent = query ? `No chats matching "${modalSearchInput.value}"` : 'No conversations yet';
+                    searchModalResults.appendChild(empty);
+                    return;
+                }
+
+                filtered.forEach(conv => {
+                    const proj = allProjectsCache.find(p => (p.conversation_ids || []).includes(conv.id));
+                    const row = document.createElement('div');
+                    row.className = 'search-modal-item';
+                    row.innerHTML = `
+                        <i class="fa-regular fa-comment"></i>
+                        <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(conv.title)}</span>
+                        ${proj ? `<span style="font-size: 0.72rem; color: var(--primary-color); background: rgba(45,212,191,0.12); padding: 2px 8px; border-radius: 8px;"><i class="fa-regular fa-folder" style="width:auto; color:var(--primary-color); margin-right:4px;"></i>${escapeHtml(proj.name)}</span>` : ''}
+                    `;
+                    row.addEventListener('click', () => {
+                        closeSearchModal();
+                        activeConversationId = conv.id;
+                        activeProjectId = proj ? proj.id : null;
+                        updateInputPlaceholder();
+                        renderFilteredConversations();
+                        renderProjectsSidebar();
+                        pushToNavHistory(conv.id, conv.title);
+                        loadConversationMessages(conv.id, conv.title);
+                    });
+                    searchModalResults.appendChild(row);
+                });
+            }
+
+            if (historyTabBtn) historyTabBtn.addEventListener('click', openSearchModal);
+            if (closeSearchModalBtn) closeSearchModalBtn.addEventListener('click', closeSearchModal);
+            if (modalSearchInput) modalSearchInput.addEventListener('input', renderSearchModalResults);
+            if (searchModalOverlay) {
+                searchModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === searchModalOverlay) closeSearchModal();
+                });
+            }
+
+            // Global keyboard shortcuts (Ctrl+K / Cmd+K for Search Modal, Escape to close modals)
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    openSearchModal();
+                } else if (e.key === 'Escape') {
+                    if (searchModalOverlay.classList.contains('open')) closeSearchModal();
+                    if (projectModalOverlay.classList.contains('open')) closeProjectModal();
+                }
+            });
+
+            // --- CHATGPT PROJECTS WORKFLOW ---
+            function openProjectModal(project = null) {
+                if (project) {
+                    editingProjectId = project.id;
+                    projectModalTitle.textContent = 'Edit project';
+                    saveProjectModalBtn.textContent = 'Save changes';
+                    projectNameInput.value = project.name || '';
+                    projectInstructionsInput.value = project.instructions || '';
+                } else {
+                    editingProjectId = null;
+                    projectModalTitle.textContent = 'Create project';
+                    saveProjectModalBtn.textContent = 'Create project';
+                    projectNameInput.value = '';
+                    projectInstructionsInput.value = '';
+                }
+                projectModalOverlay.classList.add('open');
+                setTimeout(() => projectNameInput.focus(), 50);
+            }
+
+            function closeProjectModal() {
+                projectModalOverlay.classList.remove('open');
+                editingProjectId = null;
+            }
+
+            async function saveProjectFromModal() {
+                const name = (projectNameInput.value || '').trim();
+                const instructions = (projectInstructionsInput.value || '').trim();
+                if (!name) {
+                    projectNameInput.focus();
+                    return;
+                }
+
+                try {
+                    let response;
+                    if (editingProjectId !== null) {
+                        response = await fetch(`/api/research/projects/${editingProjectId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, instructions })
+                        });
+                    } else {
+                        response = await fetch('/api/research/projects', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, instructions })
+                        });
+                    }
+
+                    if (!response.ok) throw new Error('Failed to save project');
+                    const savedProject = await response.json();
+                    closeProjectModal();
+                    expandedProjectIds.add(savedProject.id);
+                    await loadProjectsList();
+                    showProjectWorkspace(savedProject.id);
+                } catch (err) {
+                    console.error('Error saving project:', err);
+                }
+            }
+
+            if (createProjectIconBtn) createProjectIconBtn.addEventListener('click', () => openProjectModal(null));
+            if (newProjectMenuBtn) newProjectMenuBtn.addEventListener('click', () => openProjectModal(null));
+            if (closeProjectModalBtn) closeProjectModalBtn.addEventListener('click', closeProjectModal);
+            if (cancelProjectModalBtn) cancelProjectModalBtn.addEventListener('click', closeProjectModal);
+            if (saveProjectModalBtn) saveProjectModalBtn.addEventListener('click', saveProjectFromModal);
+            if (projectNameInput) {
+                projectNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveProjectFromModal();
+                    }
+                });
+            }
+            if (projectModalOverlay) {
+                projectModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === projectModalOverlay) closeProjectModal();
+                });
+            }
+
+            async function loadProjectsList() {
+                try {
+                    const response = await fetch('/api/research/projects');
+                    if (!response.ok) return;
+                    allProjectsCache = (await response.json()) || [];
+                    renderProjectsSidebar();
+                    renderFilteredConversations();
+                } catch (err) {
+                    console.error('Error loading projects:', err);
+                }
+            }
+
+            function renderProjectsSidebar() {
+                if (!projectsList) return;
+                projectsList.innerHTML = '';
+
+                if (allProjectsCache.length === 0) {
+                    projectsList.innerHTML = `<div style="padding: 4px 8px; color: var(--text-muted); font-size: 0.8rem;">No projects yet</div>`;
+                    return;
+                }
+
+                allProjectsCache.forEach(proj => {
+                    const group = document.createElement('div');
+                    group.className = 'project-group';
+
+                    const isExpanded = expandedProjectIds.has(proj.id) || activeProjectId === proj.id;
+                    const isProjectActive = (activeProjectId === proj.id && activeConversationId === null);
+                    const projChats = allConversationsCache.filter(c => (proj.conversation_ids || []).includes(c.id));
+
+                    const item = document.createElement('div');
+                    item.className = 'menu-item project-item' + (isProjectActive ? ' active' : '');
+                    item.innerHTML = `
+                        <div class="project-item-left" title="${escapeHtml(proj.name)}">
+                            <i class="fa-regular ${isExpanded ? 'fa-folder-open' : 'fa-folder'}" style="color: var(--primary-color);"></i>
+                            <span>${escapeHtml(proj.name)}</span>
+                        </div>
+                        <div class="project-item-actions">
+                            <i class="fa-solid fa-plus proj-new-chat-icon" title="New chat in project"></i>
+                            <i class="fa-solid fa-pen proj-edit-icon" title="Edit project"></i>
+                            <i class="fa-solid fa-trash proj-delete-icon" title="Delete project"></i>
+                        </div>
+                    `;
+
+                    // Clicking the project row opens the Project Workspace & toggles folder expansion
+                    item.querySelector('.project-item-left').addEventListener('click', () => {
+                        if (expandedProjectIds.has(proj.id) && activeProjectId === proj.id && activeConversationId === null) {
+                            expandedProjectIds.delete(proj.id);
+                        } else {
+                            expandedProjectIds.add(proj.id);
+                        }
+                        showProjectWorkspace(proj.id);
+                    });
+
+                    // Hover Action: New chat in project
+                    item.querySelector('.proj-new-chat-icon').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        expandedProjectIds.add(proj.id);
+                        showProjectWorkspace(proj.id);
+                        inputField.focus();
+                    });
+
+                    // Hover Action: Edit project
+                    item.querySelector('.proj-edit-icon').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openProjectModal(proj);
+                    });
+
+                    // Hover Action: Delete project
+                    item.querySelector('.proj-delete-icon').addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const res = await fetch(`/api/research/projects/${proj.id}`, { method: 'DELETE' });
+                            if (res.ok) {
+                                expandedProjectIds.delete(proj.id);
+                                if (activeProjectId === proj.id) {
+                                    activeProjectId = null;
+                                    updateInputPlaceholder();
+                                    if (activeConversationId === null) showWelcomeScreen();
+                                }
+                                await loadProjectsList();
+                            }
+                        } catch (err) {
+                            console.error('Failed to delete project:', err);
+                        }
+                    });
+
+                    group.appendChild(item);
+
+                    // Nested conversations under this project
+                    const nestedContainer = document.createElement('div');
+                    nestedContainer.className = 'project-nested-chats' + (isExpanded ? ' expanded' : '');
+
+                    projChats.forEach(conv => {
+                        const nestedItem = document.createElement('div');
+                        nestedItem.className = 'project-nested-chat-item' + (conv.id === activeConversationId ? ' active' : '');
+                        nestedItem.title = conv.title;
+                        nestedItem.innerHTML = `<i class="fa-regular fa-comment" style="margin-right: 6px; font-size: 0.75rem;"></i>${escapeHtml(conv.title)}`;
+                        nestedItem.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            activeProjectId = proj.id;
+                            activeConversationId = conv.id;
+                            updateInputPlaceholder();
+                            renderProjectsSidebar();
+                            renderFilteredConversations();
+                            pushToNavHistory(conv.id, conv.title);
+                            loadConversationMessages(conv.id, conv.title);
+                        });
+                        nestedContainer.appendChild(nestedItem);
+                    });
+
+                    group.appendChild(nestedContainer);
+                    projectsList.appendChild(group);
+                });
+            }
+
+            // Render ChatGPT Project Workspace View in the main chat container
+            function showProjectWorkspace(projectId) {
+                const proj = allProjectsCache.find(p => p.id === projectId);
+                if (!proj) return;
+
+                activeProjectId = proj.id;
+                activeConversationId = null;
+                updateInputPlaceholder();
+                renderProjectsSidebar();
+                renderFilteredConversations();
+
+                const projChats = allConversationsCache.filter(c => (proj.conversation_ids || []).includes(c.id));
+                const unassignedChats = allConversationsCache.filter(c => !(proj.conversation_ids || []).includes(c.id));
+
+                chatContainer.innerHTML = `
+                    <div class="project-workspace">
+                        <div class="project-workspace-header">
+                            <div class="project-workspace-title">
+                                <div class="project-workspace-icon">
+                                    <i class="fa-regular fa-folder-open"></i>
+                                </div>
+                                <div>
+                                    <h2 style="margin: 0; color: var(--text-bright); font-size: 1.5rem; font-weight: 600;">${escapeHtml(proj.name)}</h2>
+                                    <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.85rem;">
+                                        ${proj.instructions ? 'Custom project instructions active' : 'Project workspace • Start a chat below or manage instructions'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="project-workspace-actions">
+                                <button class="project-btn-outline" id="workspace-edit-proj-btn">
+                                    <i class="fa-solid fa-sliders"></i> Instructions
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                                    Project Instructions
+                                </div>
+                                <div style="font-size: 0.9rem; color: ${proj.instructions ? 'var(--text-main)' : 'var(--text-muted)'}; line-height: 1.4;">
+                                    ${proj.instructions ? escapeHtml(proj.instructions) : 'No custom instructions set. Click "Instructions" to tell AMBER how to behave in this project.'}
+                                </div>
+                            </div>
+                            ${unassignedChats.length > 0 ? `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <select id="assign-chat-select" style="background: rgba(15,16,22,0.85); color: var(--text-main); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; padding: 6px 10px; font-size: 0.82rem; max-width: 200px; outline: none;">
+                                        <option value="">+ Add existing chat...</option>
+                                        ${unassignedChats.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('')}
+                                    </select>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                                Chats in this project (${projChats.length})
+                            </div>
+                            <div id="project-workspace-chats" style="display: flex; flex-direction: column; gap: 10px;">
+                                ${projChats.length === 0 ? `
+                                    <div style="padding: 28px; text-align: center; color: var(--text-muted); background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; font-size: 0.9rem;">
+                                        No conversations in <strong>${escapeHtml(proj.name)}</strong> yet.<br>
+                                        Type a prompt in the box below to start a new chat in this project.
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const editBtn = document.getElementById('workspace-edit-proj-btn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', () => openProjectModal(proj));
+                }
+
+                const assignSelect = document.getElementById('assign-chat-select');
+                if (assignSelect) {
+                    assignSelect.addEventListener('change', async () => {
+                        const convId = parseInt(assignSelect.value, 10);
+                        if (!convId) return;
+                        try {
+                            const res = await fetch(`/api/research/projects/${proj.id}/conversations`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ conversation_id: convId })
+                            });
+                            if (res.ok) {
+                                await loadProjectsList();
+                                showProjectWorkspace(proj.id);
+                            }
+                        } catch (err) {
+                            console.error('Failed to assign chat to project:', err);
+                        }
+                    });
+                }
+
+                const chatsWrapper = document.getElementById('project-workspace-chats');
+                if (chatsWrapper && projChats.length > 0) {
+                    projChats.forEach(conv => {
+                        const card = document.createElement('div');
+                        card.className = 'project-chat-card';
+                        card.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                                <i class="fa-regular fa-comment" style="color: var(--primary-color);"></i>
+                                <span style="color: var(--text-bright); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(conv.title)}</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                        `;
+                        card.addEventListener('click', () => {
+                            activeProjectId = proj.id;
+                            activeConversationId = conv.id;
+                            updateInputPlaceholder();
+                            renderProjectsSidebar();
+                            renderFilteredConversations();
+                            pushToNavHistory(conv.id, conv.title);
+                            loadConversationMessages(conv.id, conv.title);
+                        });
+                        chatsWrapper.appendChild(card);
+                    });
+                }
+            }
+
+            // Render conversations into the sidebar (without #1, #2, #3 IDs)
+            function renderFilteredConversations() {
+                if (allConversationsCache.length === 0) {
+                    conversationsList.innerHTML = `<div style="padding: 6px 8px; color: var(--text-muted); font-size: 0.85rem;">No conversations yet</div>`;
+                    return;
+                }
+
+                conversationsList.innerHTML = '';
+                allConversationsCache.forEach(conv => {
+                    const item = document.createElement('div');
+                    const isActive = (conv.id === activeConversationId);
+                    item.className = 'conv-item' + (isActive ? ' active' : '');
+                    item.dataset.id = conv.id;
+                    item.innerHTML = `
+                        <span class="conv-title" title="${escapeHtml(conv.title)}">${escapeHtml(conv.title)}</span>
+                    `;
+
+                    item.addEventListener('click', () => {
+                        const proj = allProjectsCache.find(p => (p.conversation_ids || []).includes(conv.id));
+                        activeProjectId = proj ? proj.id : null;
+                        activeConversationId = conv.id;
+                        updateInputPlaceholder();
+                        renderProjectsSidebar();
+                        renderFilteredConversations();
+                        pushToNavHistory(conv.id, conv.title);
+                        loadConversationMessages(conv.id, conv.title);
+                    });
+
+                    conversationsList.appendChild(item);
+                });
+            }
+
+            // 1. Fetch conversations from PostgreSQL and render in sidebar
+            async function loadConversationsList(selectFirst = false, keepActiveId = null) {
+                try {
+                    const response = await fetch('/api/research/conversations');
+                    if (!response.ok) {
+                        conversationsList.innerHTML = `
+                            <div style="padding: 10px; color: #f87171; font-size: 0.85rem; cursor: pointer;" id="retry-load-convs">
+                                <i class="fa-solid fa-rotate-right"></i> Couldn't load chats. Tap to retry.
+                            </div>
+                        `;
+                        const retryElem = document.getElementById('retry-load-convs');
+                        if (retryElem) retryElem.addEventListener('click', () => loadConversationsList());
+                        return;
+                    }
+                    const conversations = await response.json();
+                    allConversationsCache = conversations || [];
+
+                    if (allConversationsCache.length === 0) {
+                        conversationsList.innerHTML = `<div style="padding: 6px 8px; color: var(--text-muted); font-size: 0.85rem;">No conversations yet</div>`;
+                        activeConversationId = null;
+                        renderProjectsSidebar();
+                        showWelcomeScreen();
+                        return;
+                    }
+
+                    if (keepActiveId !== null) {
+                        activeConversationId = keepActiveId;
+                    } else if (selectFirst && allConversationsCache.length > 0) {
+                        activeConversationId = allConversationsCache[0].id;
+                    }
+
+                    renderFilteredConversations();
+                    renderProjectsSidebar();
+
+                    // Select and display the latest conversation if requested
+                    if (selectFirst && allConversationsCache.length > 0) {
+                        pushToNavHistory(allConversationsCache[0].id, allConversationsCache[0].title);
+                        loadConversationMessages(allConversationsCache[0].id, allConversationsCache[0].title);
+                    }
+                } catch (err) {
+                    console.error("Error loading conversations:", err);
+                    conversationsList.innerHTML = `
+                        <div style="padding: 10px; color: #f87171; font-size: 0.85rem; cursor: pointer;" id="retry-load-convs-err">
+                            <i class="fa-solid fa-rotate-right"></i> Connection error. Tap to retry.
+                        </div>
+                    `;
+                    const retryElem = document.getElementById('retry-load-convs-err');
+                    if (retryElem) retryElem.addEventListener('click', () => loadConversationsList());
+                }
+            }
+
+            if (sectionNewChatBtn) {
+                sectionNewChatBtn.addEventListener('click', startNewGeneralChat);
+            }
+
+            // ChatGPT SVG Icons
+            const copySvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+            const checkSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            const editSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`;
+
+            // Helper: Copy message text with ChatGPT checkmark feedback
+            function copyMessageText(btn, text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    btn.innerHTML = checkSvg;
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.innerHTML = copySvg;
+                        btn.classList.remove('copied');
+                    }, 1500);
+                }).catch(err => {
+                    console.error("Failed to copy:", err);
+                });
+            }
+
+            // Helper: Inline edit user message (ChatGPT style)
+            function startEditingMessage(wrapper, originalText) {
+                const contentWrapper = wrapper.querySelector('.message-content-wrapper');
+                const bubble = wrapper.querySelector('.message-bubble');
+                const actions = wrapper.querySelector('.message-actions');
+
+                bubble.style.display = 'none';
+                actions.style.display = 'none';
+
+                const editContainer = document.createElement('div');
+                editContainer.className = 'edit-container';
+                editContainer.innerHTML = `
+                    <textarea class="edit-textarea">${originalText}</textarea>
+                    <div class="edit-btn-group">
+                        <button class="edit-cancel-btn">Cancel</button>
+                        <button class="edit-save-btn">Save & Submit</button>
+                    </div>
+                `;
+
+                editContainer.querySelector('.edit-cancel-btn').addEventListener('click', () => {
+                    editContainer.remove();
+                    bubble.style.display = '';
+                    actions.style.display = '';
+                });
+
+                editContainer.querySelector('.edit-save-btn').addEventListener('click', () => {
+                    const newText = editContainer.querySelector('.edit-textarea').value.trim();
+                    if (!newText) return;
+
+                    editContainer.remove();
+                    bubble.style.display = '';
+                    actions.style.display = '';
+
+                    inputField.value = newText;
+                    sendMessage();
+                });
+
+                contentWrapper.appendChild(editContainer);
+                const textarea = editContainer.querySelector('.edit-textarea');
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            }
+
+            // Create User message element with ChatGPT Copy + Edit icons (no profile avatar)
+            function createUserMessageElement(text) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper user';
+                wrapper.style.animation = 'fadeIn 0.3s';
+
+                const formatted = (text || '').replace(/\n/g, '<br>');
+                wrapper.innerHTML = `
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble">${formatted}</div>
+                        <div class="message-actions">
+                            <button class="action-btn copy-btn" title="Copy">${copySvg}</button>
+                            <button class="action-btn edit-btn" title="Edit message">${editSvg}</button>
+                        </div>
+                    </div>
+                `;
+
+                const copyBtn = wrapper.querySelector('.copy-btn');
+                const editBtn = wrapper.querySelector('.edit-btn');
+                copyBtn.addEventListener('click', () => copyMessageText(copyBtn, text));
+                editBtn.addEventListener('click', () => startEditingMessage(wrapper, text));
+
+                return wrapper;
+            }
+
+            // Helper: Render Markdown with clickable target="_blank" links (ChatGPT Style)
+            function renderMarkdownContent(rawText) {
+                if (!rawText) return '';
+                if (window.marked && typeof window.marked.parse === 'function') {
+                    try {
+                        let parsed = window.marked.parse(rawText);
+                        // Make all links open in new tab securely
+                        parsed = parsed.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"([^>]*)>/gi, '<a href="$1"$2 target="_blank" rel="noopener noreferrer">');
+                        return parsed;
+                    } catch (e) {
+                        console.warn("Markdown parse error, falling back:", e);
+                    }
+                }
+                // Fallback formatter
+                return escapeHtml(rawText)
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            // Helper: Extract Related Topics from AI report
+            function extractRelatedTopics(text) {
+                if (!text) return [];
+                const regex = /(?:##+\s*(?:💡\s*)?(?:Related Topics|Further Research|Related Questions|Suggested Follow-ups)[^\n]*\n)([\s\S]*?)(?:$|(?=##\s))/i;
+                const match = text.match(regex);
+                if (!match) return [];
+                
+                const sectionContent = match[1];
+                const lines = sectionContent.split('\n');
+                const topics = [];
+                for (const line of lines) {
+                    const cleaned = line.replace(/^[\s*\-•\d\.)]+/, '').trim();
+                    if (cleaned.length >= 5 && cleaned.length <= 120 && !cleaned.startsWith('http')) {
+                        topics.push(cleaned);
+                    }
+                }
+                return topics.slice(0, 4);
+            }
+
+            // Create AI message element with Structured Markdown, Sources, Related Topics & Approval Card
+            function createAiMessageElement(text, isReport = false) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper ai';
+                wrapper.style.animation = 'fadeIn 0.3s';
+
+                const formatted = renderMarkdownContent(text);
+                wrapper.innerHTML = `
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble">${formatted}</div>
+                        <div class="message-actions">
+                            <button class="action-btn copy-btn" title="Copy">${copySvg}</button>
+                        </div>
+                    </div>
+                `;
+
+                const contentWrapper = wrapper.querySelector('.message-content-wrapper');
+                const copyBtn = wrapper.querySelector('.copy-btn');
+                copyBtn.addEventListener('click', () => copyMessageText(copyBtn, text));
+
+                // 1. Interactive Related Topics Chips (ChatGPT / Perplexity discovery workflow)
+                const relatedTopics = extractRelatedTopics(text);
+                if (relatedTopics.length > 0) {
+                    const relatedDiv = document.createElement('div');
+                    relatedDiv.className = 'related-topics-container';
+                    relatedDiv.innerHTML = `
+                        <div class="related-topics-title">
+                            <i class="fa-solid fa-compass"></i> Related Research Topics
+                        </div>
+                        <div class="related-topics-list"></div>
+                    `;
+                    const listElem = relatedDiv.querySelector('.related-topics-list');
+                    relatedTopics.forEach(topic => {
+                        const chip = document.createElement('button');
+                        chip.className = 'topic-chip';
+                        chip.title = `Research: ${topic}`;
+                        chip.innerHTML = `<i class="fa-solid fa-arrow-right"></i> <span>${escapeHtml(topic)}</span>`;
+                        chip.addEventListener('click', () => {
+                            inputField.value = topic;
+                            sendMessage();
+                        });
+                        listElem.appendChild(chip);
+                    });
+                    contentWrapper.appendChild(relatedDiv);
+                }
+
+                // 2. Direct PDF Ready Card (Triggered when user says "make pdf" / "generate pdf")
+                const hasPdfLink = text && (text.includes('/api/research/download-pdf') || text.includes('Final_Research_Report.pdf'));
+                if (hasPdfLink) {
+                    const pdfCard = document.createElement('div');
+                    pdfCard.className = 'pdf-direct-card';
+                    pdfCard.innerHTML = `
+                        <div class="pdf-info">
+                            <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div>
+                                <div class="pdf-name">Final_Research_Report.pdf</div>
+                                <div class="pdf-desc">Comprehensive Formatted Research Document</div>
+                            </div>
+                        </div>
+                        <a href="/api/research/download-pdf" target="_blank" download="Final_Research_Report.pdf" class="download-pdf-btn">
+                            <i class="fa-solid fa-download"></i> Download PDF
+                        </a>
+                    `;
+                    contentWrapper.appendChild(pdfCard);
+                }
+
+                return wrapper;
+            }
+
+            // 2. Fetch and render messages for a specific conversation thread
+            async function loadConversationMessages(convId, title) {
+                chatContainer.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); animation: fadeIn 0.3s;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 16px;"></i>
+                        <p>Loading <strong>${escapeHtml(title)}</strong>...</p>
+                    </div>
+                `;
+
+                try {
+                    const response = await fetch(`/api/research/conversations/${convId}/messages`);
+                    if (!response.ok) throw new Error("Failed to load messages");
+                    const messages = await response.json();
+
+                    chatContainer.innerHTML = '';
+                    if (!messages || messages.length === 0) {
+                        chatContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center; margin-top: 40px;">No messages found in this conversation.</p>`;
+                        return;
+                    }
+
+                    messages.forEach((msg, idx) => {
+                        if (msg.sender === 'ai') {
+                            const isLatestAi = (idx === messages.length - 1);
+                            chatContainer.appendChild(createAiMessageElement(msg.text || '', isLatestAi));
+                        } else {
+                            chatContainer.appendChild(createUserMessageElement(msg.text || ''));
+                        }
+                    });
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } catch (err) {
+                    chatContainer.innerHTML = `<p style="color: #ef4444; text-align: center; margin-top: 40px;">Failed to load messages from database.</p>`;
+                }
+            }
+
+            // New Conversation button
+            newChatBtn.addEventListener('click', startNewGeneralChat);
+
+            let currentAbortController = null;
+            let activeTaskId = null;
+
+            let isResearching = false;
+
+            function restoreSendButton() {
+                isResearching = false;
+                sendBtn.classList.remove('stop-btn');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `Send <i class="fa-solid fa-paper-plane"></i>`;
+                sendBtn.title = "Send research prompt";
+            }
+
+            function setStopButton() {
+                isResearching = true;
+                sendBtn.classList.add('stop-btn');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-square"></i> Stop`;
+                sendBtn.title = "Stop research immediately";
+            }
+
+            // Terminate ongoing AI research (both in browser and on Python backend)
+            window.terminateResearch = function() {
+                const taskIdToKill = activeTaskId;
+                activeTaskId = null;
+
+                if (currentAbortController) {
+                    currentAbortController.abort();
+                    currentAbortController = null;
+                }
+
+                // Tell the FastAPI backend to kill background tasks immediately!
+                if (taskIdToKill) {
+                    fetch('/api/research/terminate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ task_id: taskIdToKill })
+                    }).catch(err => console.log("Backend terminate notification error:", err));
+                }
+
+                restoreSendButton();
+                const loadingElem = document.querySelector('.message-wrapper.ai.loading-state');
+                if (loadingElem) {
+                    loadingElem.classList.remove('loading-state');
+                    const bubble = loadingElem.querySelector('.message-bubble');
+                    if (bubble) {
+                        bubble.innerHTML = `<i class="fa-solid fa-circle-stop" style="color: #ef4444; margin-right: 6px;"></i> Research stopped by user.`;
+                        bubble.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                    }
+                }
+                const cursors = document.querySelectorAll('.chatgpt-cursor');
+                cursors.forEach(c => c.remove());
+            };
+
+            // 3. Send message & save to conversation thread (supports active Project context)
+            async function sendMessage() {
+                if (isResearching) return;
+                const text = inputField.value.trim();
+                if (!text) return;
+                
+                if (chatContainer.querySelector('h2') || chatContainer.querySelector('.project-workspace')) {
+                    chatContainer.innerHTML = '';
+                }
+
+                // 1. Show User Message
+                chatContainer.appendChild(createUserMessageElement(text));
+                inputField.value = '';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // 2. Set Active Task & Abort Controller (Morph Send into Stop Button)
+                activeTaskId = "task-" + Date.now();
+                currentAbortController = new AbortController();
+                setStopButton();
+
+                // Show Clean Loading Indicator
+                const loadingId = "loading-" + Date.now();
+                const loadingElem = document.createElement('div');
+                loadingElem.id = loadingId;
+                loadingElem.className = 'message-wrapper ai loading-state';
+                loadingElem.style.animation = 'fadeIn 0.3s';
+                loadingElem.innerHTML = `
+                    <div class="message-bubble" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="color: var(--primary-color);"></i>
+                        <span>Researching...</span>
+                    </div>
+                `;
+                chatContainer.appendChild(loadingElem);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                try {
+                    // 3. Send to FastAPI backend with current conversation ID, project ID, task ID, selected Model, and abort signal
+                    const chosenModel = selectedModelInput ? selectedModelInput.value : 'nvidia_llama';
+                    const response = await fetch('/api/research/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            user_topic: text,
+                            conversation_id: activeConversationId,
+                            project_id: activeProjectId,
+                            task_id: activeTaskId,
+                            model_id: chosenModel
+                        }),
+                        signal: currentAbortController.signal
+                    });
+
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(JSON.stringify(data));
+                    }
+                    
+                    if (data.conversation_id) {
+                        activeConversationId = data.conversation_id;
+                    }
+
+                    // 4. Show AI Response via ChatGPT Word-by-Word Streaming
+                    const activeLoadingElem = document.getElementById(loadingId);
+                    if (activeLoadingElem) activeLoadingElem.remove();
+
+                    const reportText = data.report || data.message || "Done!";
+                    await streamAiResponseWordByWord(reportText, data);
+
+                    // Automatically trigger PDF download if user requested PDF
+                    if (data.is_pdf_ready && data.pdf_url) {
+                        window.open(data.pdf_url, '_blank');
+                    }
+
+                    // 5. Refresh conversations and projects list, keeping current thread active
+                    await loadConversationsList(false, activeConversationId);
+                    await loadProjectsList();
+
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+
+                    const activeLoadingElem = document.getElementById(loadingId);
+                    if (activeLoadingElem) activeLoadingElem.remove();
+
+                    chatContainer.innerHTML += `
+                        <div class="message-wrapper ai" style="color: #ef4444;">
+                            <div class="message-bubble" style="border-color: #ef4444;"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i> Error connecting to server. Is FastAPI running?</div>
+                        </div>
+                    `;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } finally {
+                    currentAbortController = null;
+                    restoreSendButton();
+                }
+            }
+
+            // ChatGPT-Style Word-by-Word Typewriter Streaming Animation
+            async function streamAiResponseWordByWord(fullText, data) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper ai';
+                wrapper.style.animation = 'fadeIn 0.3s';
+
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'message-content-wrapper';
+
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble';
+                contentWrapper.appendChild(bubble);
+                wrapper.appendChild(contentWrapper);
+                chatContainer.appendChild(wrapper);
+
+                // Tokenize by words and whitespace
+                const tokens = fullText.split(/(\s+)/);
+                let currentText = '';
+                
+                // Adaptive chunking: smooth live typing speed
+                const chunkSize = 2; // 2 tokens per frame
+                for (let i = 0; i < tokens.length; i += chunkSize) {
+                    const chunk = tokens.slice(i, i + chunkSize).join('');
+                    currentText += chunk;
+                    bubble.innerHTML = renderMarkdownContent(currentText) + `<span class="chatgpt-cursor"></span>`;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    await new Promise(r => setTimeout(r, 14));
+                }
+
+                // Final render without cursor
+                bubble.innerHTML = renderMarkdownContent(fullText);
+
+                // Add Copy action button
+                const actions = document.createElement('div');
+                actions.className = 'message-actions';
+                actions.innerHTML = `<button class="action-btn copy-btn" title="Copy">${copySvg}</button>`;
+                const copyBtn = actions.querySelector('.copy-btn');
+                copyBtn.addEventListener('click', () => copyMessageText(copyBtn, fullText));
+                contentWrapper.appendChild(actions);
+
+                // Add Related Topics Chips (ChatGPT / Perplexity style)
+                const relatedTopics = extractRelatedTopics(fullText);
+                if (relatedTopics.length > 0) {
+                    const relatedDiv = document.createElement('div');
+                    relatedDiv.className = 'related-topics-container';
+                    relatedDiv.innerHTML = `
+                        <div class="related-topics-title">
+                            <i class="fa-solid fa-compass"></i> Related Research Topics
+                        </div>
+                        <div class="related-topics-list"></div>
+                    `;
+                    const listElem = relatedDiv.querySelector('.related-topics-list');
+                    relatedTopics.forEach(topic => {
+                        const chip = document.createElement('button');
+                        chip.className = 'topic-chip';
+                        chip.title = `Research: ${topic}`;
+                        chip.innerHTML = `<i class="fa-solid fa-arrow-right"></i> <span>${escapeHtml(topic)}</span>`;
+                        chip.addEventListener('click', () => {
+                            inputField.value = topic;
+                            sendMessage();
+                        });
+                        listElem.appendChild(chip);
+                    });
+                    contentWrapper.appendChild(relatedDiv);
+                }
+
+                // Direct PDF Ready Card if applicable
+                const hasPdfLink = fullText && (fullText.includes('/api/research/download-pdf') || fullText.includes('Final_Research_Report.pdf'));
+                if (hasPdfLink) {
+                    const pdfCard = document.createElement('div');
+                    pdfCard.className = 'pdf-direct-card';
+                    pdfCard.innerHTML = `
+                        <div class="pdf-info">
+                            <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div>
+                                <div class="pdf-name">Final_Research_Report.pdf</div>
+                                <div class="pdf-desc">Comprehensive Formatted Research Document</div>
+                            </div>
+                        </div>
+                        <a href="/api/research/download-pdf" target="_blank" download="Final_Research_Report.pdf" class="download-pdf-btn">
+                            <i class="fa-solid fa-download"></i> Download PDF
+                        </a>
+                    `;
+                    contentWrapper.appendChild(pdfCard);
+                }
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            sendBtn.addEventListener('click', () => {
+                if (isResearching) {
+                    window.terminateResearch();
+                } else {
+                    sendMessage();
+                }
+            });
+
+            inputField.addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') {
+                    if (!isResearching) {
+                        sendMessage();
+                    }
+                }
+            });
+
+            // Initialize on page load (load conversations & projects cleanly)
+            async function initializeApp() {
+                await loadConversationsList(true);
+                await loadProjectsList();
+            }
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
