@@ -47,11 +47,17 @@ TaskOutput.__init__ = _safe_task_output_init
 
 Research_AI = APIRouter(prefix="/api/research", tags=["Research_AI"])
 
-LOGO_FILE_PATH = "/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGO_FILE_PATH = os.path.join(BASE_DIR, "amber_logo_transparent.png")
+FALLBACK_LOGO = "/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png"
 
 @Research_AI.get("/logo")
 def get_amber_logo():
-    return FileResponse(LOGO_FILE_PATH, media_type="image/png")
+    if os.path.exists(LOGO_FILE_PATH):
+        return FileResponse(LOGO_FILE_PATH, media_type="image/png")
+    if os.path.exists(FALLBACK_LOGO):
+        return FileResponse(FALLBACK_LOGO, media_type="image/png")
+    return {"status": "Logo not found"}
 
 active_tasks: dict[str, mp.Process] = {}
 active_streaming_tasks: dict[str, bool] = {}
