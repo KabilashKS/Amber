@@ -16,12 +16,19 @@ app.include_router(auth_route, prefix="/auth", tags=["Authentication"])
 
 SQLModel.metadata.create_all(engine)
 
-LOGO_FILE_PATH = "/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png"
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOGO_FILE_PATH = os.path.join(BASE_DIR, "amber_logo_transparent.png")
+FALLBACK_LOGO = "/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png"
 
 @app.get("/api/research/logo")
-@app.get("/home/kabilash/.gemini/antigravity/brain/83399c15-8e53-4883-bc19-86fc1b252c71/amber_logo_transparent.png")
 async def serve_amber_logo():
-    return FileResponse(LOGO_FILE_PATH, media_type="image/png")
+    if os.path.exists(LOGO_FILE_PATH):
+        return FileResponse(LOGO_FILE_PATH, media_type="image/png")
+    if os.path.exists(FALLBACK_LOGO):
+        return FileResponse(FALLBACK_LOGO, media_type="image/png")
+    return FileResponse(os.devnull)
 
 @app.get("/")
 async def home(request: Request):
