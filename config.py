@@ -38,7 +38,7 @@ AVAILABLE_MODELS = {
     },
     # NVIDIA Nemotron Family
     "nvidia_nemotron_lightning": {
-        "name": "Nemotron 30B Lightning",
+        "name": "Nemotron 30B",
         "provider": "nvidia",
         "model": "openai/nvidia/nemotron-3.5-lightning-30b-a3b",
         "base_url": NVIDIA_BASE_URL,
@@ -112,9 +112,9 @@ AVAILABLE_MODELS = {
     }
 }
 
-def get_llm(model_id: str = "nvidia_llama") -> LLM:
+def get_llm(model_id: str = "nvidia_nemotron_lightning") -> LLM:
     """Returns the configured CrewAI LLM for the requested model ID."""
-    cfg = AVAILABLE_MODELS.get(model_id, AVAILABLE_MODELS["nvidia_llama"])
+    cfg = AVAILABLE_MODELS.get(model_id, AVAILABLE_MODELS["nvidia_nemotron_lightning"])
     
     if cfg["provider"] == "nvidia":
         api_key = os.getenv(cfg["api_key_env"]) or os.getenv("NVIDIA_API_KEY", "")
@@ -136,10 +136,10 @@ def get_llm(model_id: str = "nvidia_llama") -> LLM:
     
     # Fallback default
     return LLM(
-        model=AVAILABLE_MODELS["nvidia_llama"]["model"],
+        model=AVAILABLE_MODELS["nvidia_nemotron_lightning"]["model"],
         base_url=NVIDIA_BASE_URL,
         api_key=os.getenv("NVIDIA_API_KEY", "")
     )
 
 # Default LLM initialized on start for agent modules
-master_llm = get_llm("nvidia_llama")
+master_llm = get_llm("nvidia_nemotron_lightning")

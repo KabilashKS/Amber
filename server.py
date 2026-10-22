@@ -95,7 +95,7 @@ class ResearchRequest(BaseModel):
     conversation_id: int | None = None
     project_id: int | None = None
     task_id: str | None = None
-    model_id: str | None = "nvidia_llama"
+    model_id: str | None = "nvidia_nemotron_lightning"
 
 @Research_AI.get("/models")
 def get_available_models():
@@ -495,7 +495,7 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
         res_queue = mp.Queue()
         proc = mp.Process(
             target=_run_crew_synthesis,
-            args=(task_description, request.model_id or "nvidia_llama", res_queue),
+            args=(task_description, request.model_id or "nvidia_nemotron_lightning", res_queue),
             daemon=True
         )
         active_tasks[task_id] = proc
