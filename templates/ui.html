@@ -2235,9 +2235,13 @@
                 `;
             }
 
-            function startNewGeneralChat() {
+            function startNewGeneralChat(updateUrl = true) {
                 activeConversationId = null;
                 activeProjectId = null;
+                if (updateUrl && window.location.search) {
+                    window.history.pushState({}, '', window.location.pathname);
+                }
+                document.title = "AMBER Research AI";
                 updateInputPlaceholder();
                 renderFilteredConversations();
                 renderProjectsSidebar();
@@ -2699,6 +2703,7 @@
 
                     item.addEventListener('click', () => {
                         if (item.classList.contains('editing')) return;
+                        if (String(conv.id).startsWith('temp-')) return;
                         const proj = allProjectsCache.find(p => (p.conversation_ids || []).includes(conv.id));
                         activeProjectId = proj ? proj.id : null;
                         activeConversationId = conv.id;
@@ -2706,7 +2711,7 @@
                         renderProjectsSidebar();
                         renderFilteredConversations();
                         pushToNavHistory(conv.id, conv.title);
-                        loadConversationMessages(conv.id, conv.title);
+                        loadConversationMessages(conv.id, conv.title, true);
                     });
 
                     conversationsList.appendChild(item);
@@ -2832,7 +2837,10 @@
             // 1. Fetch conversations from PostgreSQL and render in sidebar
             async function loadConversationsList(selectFirst = false, keepActiveId = null) {
                 try {
-                    const response = await fetch('/api/research/conversations');
+                    const response = await fetch(`/api/research/conversations?_t=${Date.now()}`, {
+                        cache: 'no-store',
+                        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+                    });
                     if (!response.ok) {
                         conversationsList.innerHTML = `
                             <div style="padding: 10px; color: #f87171; font-size: 0.85rem; cursor: pointer;" id="retry-load-convs">
@@ -2844,7 +2852,15 @@
                         return;
                     }
                     const conversations = await response.json();
+
+                    // Preserve any active optimistic pending chat if still processing
+                    const pendingTemps = allConversationsCache.filter(c => String(c.id).startsWith('temp-'));
                     allConversationsCache = conversations || [];
+                    pendingTemps.forEach(pt => {
+                        if (!allConversationsCache.some(c => c.id === pt.id)) {
+                            allConversationsCache.unshift(pt);
+                        }
+                    });
 
                     if (allConversationsCache.length === 0) {
                         conversationsList.innerHTML = `<div style="padding: 6px 8px; color: var(--text-muted); font-size: 0.85rem;">No conversations yet</div>`;
@@ -3086,8 +3102,17 @@
             }
 
             // 2. Fetch and render messages for a specific conversation thread
-            async function loadConversationMessages(convId, title) {
+            async function loadConversationMessages(convId, title, updateUrl = true) {
                 closeMobileSidebar();
+                if (updateUrl && convId && !String(convId).startsWith('temp-')) {
+                    const newUrl = `${window.location.pathname}?chat=${encodeURIComponent(convId)}`;
+                    if (window.location.search !== `?chat=${encodeURIComponent(convId)}`) {
+                        window.history.pushState({ chatId: convId }, '', newUrl);
+                    }
+                }
+                if (title) {
+                    document.title = "AMBER · " + title;
+                }
                 chatContainer.innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); animation: fadeIn 0.3s;">
                         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 16px;"></i>
@@ -3193,9 +3218,12 @@
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
                 // If starting a new conversation, optimistically show it in the sidebar in real time!
+                let tempConvId = null;
                 if (!activeConversationId) {
-                    const optimisticTitle = text.slice(0, 45);
-                    allConversationsCache.unshift({ id: 'temp-' + Date.now(), title: optimisticTitle });
+                    tempConvId = 'temp-' + Date.now();
+                    const optimisticTitle = text.slice(0, 48).trim() || 'New Conversation';
+                    allConversationsCache.unshift({ id: tempConvId, title: optimisticTitle });
+                    activeConversationId = tempConvId;
                     renderFilteredConversations();
                 }
 
@@ -3222,12 +3250,13 @@
                 try {
                     // 3. Send to FastAPI backend with current conversation ID, project ID, task ID, selected Model, and abort signal
                     const chosenModel = selectedModelInput ? selectedModelInput.value : 'nvidia_llama';
+                    const backendConvId = (activeConversationId && !String(activeConversationId).startsWith('temp-')) ? activeConversationId : null;
                     const response = await fetch('/api/research/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             user_topic: text,
-                            conversation_id: activeConversationId,
+                            conversation_id: backendConvId,
                             project_id: activeProjectId,
                             task_id: activeTaskId,
                             model_id: chosenModel
@@ -3254,6 +3283,21 @@
                     
                     if (data.conversation_id) {
                         activeConversationId = data.conversation_id;
+
+                        // Immediately update URL without full page reload, like ChatGPT
+                        const newUrl = `${window.location.pathname}?chat=${encodeURIComponent(activeConversationId)}`;
+                        window.history.pushState({ chatId: activeConversationId }, '', newUrl);
+
+                        // If we had a temporary item, update it in place immediately
+                        if (tempConvId) {
+                            const tempIdx = allConversationsCache.findIndex(c => c.id === tempConvId);
+                            if (tempIdx !== -1) {
+                                allConversationsCache[tempIdx].id = data.conversation_id;
+                                if (data.conversation_title) {
+                                    allConversationsCache[tempIdx].title = data.conversation_title;
+                                }
+                            }
+                        }
                     }
 
                     // Real-time update: refresh sidebar with the actual saved conversation immediately!
@@ -3273,6 +3317,12 @@
                     }
 
                 } catch (error) {
+                    if (tempConvId) {
+                        allConversationsCache = allConversationsCache.filter(c => c.id !== tempConvId);
+                        activeConversationId = null;
+                        renderFilteredConversations();
+                    }
+
                     if (error.name === 'AbortError') {
                         return;
                     }
@@ -3439,14 +3489,32 @@
                         activeConversationId = foundConv.id;
                         renderFilteredConversations();
                         renderProjectsSidebar();
-                        loadConversationMessages(foundConv.id, foundConv.title);
+                        loadConversationMessages(foundConv.id, foundConv.title, false);
                         return;
                     }
                 }
 
-                startNewGeneralChat();
+                // First visit or fresh new tab defaults to clean new conversation screen
+                startNewGeneralChat(false);
             }
             initializeApp();
+
+            // Handle browser Back / Forward buttons seamlessly
+            window.addEventListener('popstate', (e) => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const chatId = urlParams.get('chat');
+                if (chatId) {
+                    const found = allConversationsCache.find(c => String(c.id) === String(chatId));
+                    if (found) {
+                        activeConversationId = found.id;
+                        renderFilteredConversations();
+                        renderProjectsSidebar();
+                        loadConversationMessages(found.id, found.title, false);
+                        return;
+                    }
+                }
+                startNewGeneralChat(false);
+            });
         });
     </script>
 </body>

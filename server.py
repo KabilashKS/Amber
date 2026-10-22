@@ -14,7 +14,7 @@ from verifier import evidence_agent
 from report import report_agent
 from publisher import publisher_agent, generate_pdf
 from crewai import Task, Crew
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Session, select
@@ -335,7 +335,12 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
             conv = None
 
         if not conv:
-            conv = Conversation(title=user_topic[:50])
+            # Cleanly format title: collapse whitespace, trim to 60 chars
+            clean_title = re.sub(r'[\r\n\t]+', ' ', user_topic).strip()
+            clean_title = re.sub(r'\s{2,}', ' ', clean_title)[:60].strip()
+            if not clean_title:
+                clean_title = "New Research"
+            conv = Conversation(title=clean_title)
             db.add(conv)
             db.commit()
             db.refresh(conv)
@@ -513,6 +518,7 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
                 "topic": user_topic,
                 "report": "Research was terminated by user.",
                 "conversation_id": conv.id,
+                "conversation_title": conv.title,
                 "needs_approval": False,
                 "is_pdf_ready": False
             }
@@ -523,6 +529,7 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
                 "topic": user_topic,
                 "report": f"Error: {result}",
                 "conversation_id": conv.id,
+                "conversation_title": conv.title,
                 "needs_approval": False,
                 "is_pdf_ready": False
             }
@@ -544,6 +551,7 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
             "topic": user_topic,
             "report": result_text,
             "conversation_id": conv.id,
+            "conversation_title": conv.title,
             "needs_approval": False,
             "is_pdf_ready": is_pdf_cmd,
             "pdf_url": "/api/research/download-pdf" if is_pdf_cmd else None
@@ -598,7 +606,10 @@ def terminate_research_task(req: TerminateRequest):
     return {"status": "Success", "message": f"Task {task_id} terminated."}
 
 @Research_AI.get("/conversations")
-def get_all_conversations(db: Session = Depends(get_session)):
+def get_all_conversations(response: Response, db: Session = Depends(get_session)):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     statement = select(Conversation).order_by(Conversation.id.desc())
     conversations = db.exec(statement).all()
     return conversations
