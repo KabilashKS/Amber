@@ -682,19 +682,28 @@
             50% { opacity: 0; }
         }
         .message-bubble table {
+            display: block;
             width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             border-collapse: collapse;
             margin: 12px 0;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
         }
         .message-bubble th, .message-bubble td {
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             padding: 8px 12px;
             text-align: left;
+            word-break: normal;
+            overflow-wrap: normal;
+            min-width: 130px;
         }
         .message-bubble th {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-bright);
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         /* Clickable Base Paper & Source URLs */
@@ -1641,10 +1650,25 @@
 
             .message-bubble table {
                 display: block;
+                width: 100%;
                 max-width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-                font-size: 0.74rem;
+                border-collapse: collapse;
+                margin: 10px 0;
+                font-size: 0.78rem;
+            }
+
+            .message-bubble th, .message-bubble td {
+                padding: 6px 10px;
+                word-break: normal;
+                overflow-wrap: normal;
+                min-width: 110px;
+            }
+
+            .message-bubble th {
+                white-space: nowrap;
+                font-size: 0.76rem;
             }
 
             .message-bubble pre {
