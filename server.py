@@ -14,10 +14,9 @@ from verifier import evidence_agent
 from report import report_agent
 from publisher import publisher_agent, generate_pdf
 from crewai import Task, Crew
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from fastapi import Depends
 from sqlmodel import SQLModel, Session, select
 from database import engine
 from model import Conversation, Message, Project, ProjectConversation
@@ -80,6 +79,9 @@ class TerminateRequest(BaseModel):
 class ApproveReportRequest(BaseModel):
     report_text: str
     conversation_id: int | None = None
+
+class ConversationUpdateRequest(BaseModel):
+    title: str
 
 class ProjectCreateRequest(BaseModel):
     name: str
@@ -607,6 +609,42 @@ def get_conversation_messages(conversation_id: int, db: Session = Depends(get_se
     statement = select(Message).where(Message.conversation_id == conversation_id).order_by(Message.id.asc())
     messages = db.exec(statement).all()
     return messages
+
+# Rename a conversation
+@Research_AI.patch("/conversations/{conversation_id}")
+def update_conversation(conversation_id: int, req: ConversationUpdateRequest, db: Session = Depends(get_session)):
+    conv = db.get(Conversation, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    new_title = req.title.strip()
+    if not new_title:
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+    conv.title = new_title
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    return {"status": "Success", "conversation": conv}
+
+# Delete a conversation
+@Research_AI.delete("/conversations/{conversation_id}")
+def delete_conversation(conversation_id: int, db: Session = Depends(get_session)):
+    conv = db.get(Conversation, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Delete associated messages
+    messages = db.exec(select(Message).where(Message.conversation_id == conversation_id)).all()
+    for msg in messages:
+        db.delete(msg)
+    
+    # Delete project associations
+    proj_links = db.exec(select(ProjectConversation).where(ProjectConversation.conversation_id == conversation_id)).all()
+    for link in proj_links:
+        db.delete(link)
+        
+    db.delete(conv)
+    db.commit()
+    return {"status": "Success", "message": f"Conversation {conversation_id} deleted"}
 
 # 3. Projects Endpoints (ChatGPT Projects Workflow)
 @Research_AI.get("/projects")
