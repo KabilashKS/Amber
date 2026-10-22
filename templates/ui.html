@@ -1150,10 +1150,152 @@
         }
 
         /* ========================================================= */
-        /* RESPONSIVE DESIGN FOR MOBILE & TABLET (Modern Web Best Practice) */
+        /* CHATGPT-STYLE TOP HEADER & MODEL SELECTOR TAB */
         /* ========================================================= */
-        .mobile-header {
+        .chat-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(18, 20, 28, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 40;
+            flex-shrink: 0;
+            min-height: 56px;
+        }
+
+        .chat-top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Sidebar toggle button in chat header (desktop collapsed or mobile) */
+        .header-sidebar-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
             display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+        }
+        .header-sidebar-toggle-btn:hover {
+            color: var(--text-bright);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* When desktop sidebar is collapsed, reveal expand button in top-bar */
+        .sidebar.collapsed ~ .main-content .header-sidebar-toggle-btn {
+            display: inline-flex;
+        }
+
+        /* ChatGPT-Style Model Selector Tab */
+        .chatgpt-model-tab {
+            position: relative;
+            display: inline-flex;
+            user-select: none;
+        }
+
+        .model-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-bright);
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .model-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .model-tab-btn .model-brand-prefix {
+            font-family: 'Iceland', cursive;
+            font-size: 1.45rem;
+            color: var(--text-bright);
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .model-tab-btn .model-brand-prefix img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.3));
+        }
+        .model-tab-btn .model-tab-divider {
+            color: var(--text-muted);
+            opacity: 0.4;
+            font-weight: 300;
+            margin: 0 1px;
+        }
+        .model-tab-btn .model-tab-name {
+            color: #5eead4;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+        .model-tab-btn .chevron {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+            margin-left: 2px;
+        }
+        .chatgpt-model-tab.open .chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Top Dropdown Popover */
+        .model-tab-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 360px;
+            max-width: 92vw;
+            max-height: 420px;
+            background: #14161f;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px) scale(0.97);
+            pointer-events: none;
+            transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.18s;
+        }
+        .chatgpt-model-tab.open .model-tab-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .chat-top-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .sidebar-backdrop {
@@ -1171,61 +1313,34 @@
                 overflow: hidden;
             }
 
-            /* Sleek Mobile App Header */
-            .mobile-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 14px;
+            .chat-top-bar {
+                padding: 8px 12px;
+                min-height: 50px;
                 background: rgba(18, 20, 28, 0.85);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border-bottom: 1px solid var(--glass-border);
-                z-index: 50;
-                flex-shrink: 0;
             }
 
-            .mobile-header-brand {
-                display: flex;
-                align-items: center;
-                gap: 2px;
-                cursor: pointer;
+            .header-sidebar-toggle-btn {
+                display: inline-flex !important;
             }
 
-            .mobile-header-brand .logo-img {
-                width: 24px;
-                height: 24px;
-                object-fit: contain;
-                filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25));
+            .model-tab-btn {
+                padding: 4px 8px;
+                font-size: 0.92rem;
+                gap: 6px;
             }
-
-            .mobile-header-brand .logo-text {
-                font-family: 'Iceland', cursive;
-                font-size: 1.8rem;
-                font-weight: 600;
-                letter-spacing: 1px;
-                color: var(--text-bright);
-                line-height: 1;
+            .model-tab-btn .model-brand-prefix {
+                font-size: 1.25rem;
             }
-
-            .mobile-icon-btn {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid var(--glass-border);
-                color: var(--text-bright);
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.95rem;
-                cursor: pointer;
-                transition: background 0.15s, transform 0.1s;
+            .model-tab-btn .model-brand-prefix img {
+                width: 20px;
+                height: 20px;
             }
-
-            .mobile-icon-btn:active {
-                transform: scale(0.95);
-                background: rgba(255, 255, 255, 0.12);
+            .model-tab-btn .model-tab-name {
+                font-size: 0.88rem;
+                max-width: 160px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             /* Off-canvas Slide-in Drawer Sidebar */
@@ -1363,8 +1478,15 @@
         }
 
         @media (max-width: 480px) {
+            .model-tab-btn .model-brand-prefix span {
+                display: none; /* Hide 'MBER' text on ultra-narrow phones, keeping logo icon + model name */
+            }
+            .model-tab-btn .model-tab-name {
+                max-width: 140px;
+                font-size: 0.84rem;
+            }
             #model-display-name {
-                display: none; /* Keep model icon + sparkle on narrow phones */
+                display: none; /* In bottom prompt bar, keep model icon on narrow phones */
             }
             .send-btn .send-text {
                 display: none; /* Just paper plane icon */
@@ -1469,19 +1591,42 @@
     </div>
 
     <main class="main-content glass-panel">
-        <!-- Sleek Responsive Mobile Top Bar -->
-        <div class="mobile-header">
-            <button class="mobile-icon-btn" id="mobile-sidebar-toggle" title="Open Navigation">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="mobile-header-brand" id="mobile-brand-logo" title="AMBER Research AI">
-                <img src="/api/research/logo" class="logo-img" alt="AMBER">
-                <span class="logo-text">MBER</span>
+        <!-- ChatGPT-Style Top Header Bar with Model Selector Tab -->
+        <header class="chat-top-bar" id="chat-top-bar">
+            <div class="chat-top-left">
+                <!-- Sidebar Toggle for Mobile & Collapsed Desktop -->
+                <button class="header-sidebar-toggle-btn" id="chat-header-sidebar-btn" title="Toggle Navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                
+                <!-- ChatGPT-Style Model Selector Tab -->
+                <div class="chatgpt-model-tab" id="chatgpt-model-tab">
+                    <button class="model-tab-btn" id="header-model-btn" type="button" title="Select AI Model">
+                        <span class="model-brand-prefix">
+                            <img src="/api/research/logo" alt="Logo">
+                            <span>MBER</span>
+                        </span>
+                        <span class="model-tab-divider">·</span>
+                        <span class="model-tab-name" id="header-model-name">Llama 3.2 11B Vision</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                    <div class="model-tab-dropdown" id="model-tab-dropdown">
+                        <div class="model-menu-header">
+                            <span>Model</span>
+                        </div>
+                        <div class="model-menu-list" id="header-model-menu-list">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button class="mobile-icon-btn" id="mobile-new-chat-btn" title="New Chat">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </div>
+
+            <div class="chat-top-right">
+                <button class="header-icon-btn" id="header-new-chat-btn" title="New Conversation">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </header>
 
         <div class="chat-container"></div>
 
@@ -1522,6 +1667,7 @@
             const inputField = document.getElementById('chat-input');
             const sendBtn = document.getElementById('send-btn');
             // Antigravity Model Picker Elements
+            // Antigravity Model Picker Elements (Bottom Bar & Top Header Tab)
             const modelPicker = document.getElementById('antigravity-model-picker');
             const modelPickerBtn = document.getElementById('model-picker-btn');
             const modelMenu = document.getElementById('antigravity-model-menu');
@@ -1529,6 +1675,14 @@
             const modelDisplayName = document.getElementById('model-display-name');
             const modelPickerIcon = document.getElementById('model-picker-icon');
             const selectedModelInput = document.getElementById('selected-model-id');
+
+            // ChatGPT-Style Top Header Model Tab Elements
+            const chatgptModelTab = document.getElementById('chatgpt-model-tab');
+            const headerModelBtn = document.getElementById('header-model-btn');
+            const headerModelName = document.getElementById('header-model-name');
+            const headerModelMenuList = document.getElementById('header-model-menu-list');
+            const chatHeaderSidebarBtn = document.getElementById('chat-header-sidebar-btn');
+            const headerNewChatBtn = document.getElementById('header-new-chat-btn');
 
             const MODEL_CATALOG = [
                 { id: "meta_muse", name: "Muse 30B", provider: "nvidia", tier: "Fast", context: "Fast · Quick creative & technical research" },
@@ -1543,9 +1697,9 @@
                 { id: "gemini", name: "Gemini 1.5 Flash", provider: "google", tier: "Fast", context: "Fast · Cloud sub-second real-time streaming" }
             ];
 
-            function renderAntigravityModelMenu(models) {
-                if (!modelMenuList) return;
-                modelMenuList.innerHTML = '';
+            function populateModelListToContainer(container, models) {
+                if (!container) return;
+                container.innerHTML = '';
                 const groups = {
                     nvidia: { title: "NVIDIA NIM Cloud", items: [] },
                     google: { title: "Google Cloud", items: [] }
@@ -1561,7 +1715,7 @@
                     const groupTitle = document.createElement('div');
                     groupTitle.className = 'model-menu-group-title';
                     groupTitle.textContent = g.title;
-                    modelMenuList.appendChild(groupTitle);
+                    container.appendChild(groupTitle);
 
                     g.items.forEach(m => {
                         const isSelected = (selectedModelInput.value === m.id);
@@ -1583,19 +1737,43 @@
                             e.stopPropagation();
                             selectAntigravityModel(m);
                         });
-                        modelMenuList.appendChild(row);
+                        container.appendChild(row);
                     });
                 });
             }
 
+            function renderAntigravityModelMenu(models) {
+                populateModelListToContainer(modelMenuList, models);
+                populateModelListToContainer(headerModelMenuList, models);
+            }
+
             function selectAntigravityModel(m) {
                 selectedModelInput.value = m.id;
-                modelDisplayName.textContent = m.name;
-                modelPicker.classList.remove('open');
-                modelMenu.classList.remove('open');
+                if (modelDisplayName) modelDisplayName.textContent = m.name;
+                if (headerModelName) headerModelName.textContent = m.name;
+                document.title = "AMBER · " + m.name;
+                if (modelPicker) modelPicker.classList.remove('open');
+                if (modelMenu) modelMenu.classList.remove('open');
+                if (chatgptModelTab) chatgptModelTab.classList.remove('open');
                 renderAntigravityModelMenu(MODEL_CATALOG);
             }
 
+            // Top Header Model Tab Trigger
+            if (headerModelBtn && chatgptModelTab) {
+                headerModelBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = chatgptModelTab.classList.contains('open');
+                    if (isOpen) {
+                        chatgptModelTab.classList.remove('open');
+                    } else {
+                        if (modelPicker) modelPicker.classList.remove('open');
+                        if (modelMenu) modelMenu.classList.remove('open');
+                        chatgptModelTab.classList.add('open');
+                    }
+                });
+            }
+
+            // Bottom Input Bar Model Picker Trigger
             if (modelPickerBtn && modelMenu) {
                 modelPickerBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1604,43 +1782,49 @@
                         modelPicker.classList.remove('open');
                         modelMenu.classList.remove('open');
                     } else {
+                        if (chatgptModelTab) chatgptModelTab.classList.remove('open');
                         modelPicker.classList.add('open');
                         modelMenu.classList.add('open');
                     }
                 });
-
-                document.addEventListener('click', (e) => {
-                    if (modelPicker && !modelPicker.contains(e.target)) {
-                        modelPicker.classList.remove('open');
-                        modelMenu.classList.remove('open');
-                    }
-                });
-
-                renderAntigravityModelMenu(MODEL_CATALOG);
-
-                async function syncServerModels() {
-                    try {
-                        const res = await fetch('/api/research/models');
-                        if (res.ok) {
-                            const serverModels = await res.json();
-                            serverModels.forEach(sm => {
-                                if (!MODEL_CATALOG.find(m => m.id === sm.id)) {
-                                    MODEL_CATALOG.push({
-                                        id: sm.id,
-                                        name: sm.name,
-                                        provider: sm.provider,
-                                        badge: sm.provider === 'ollama' ? 'Local Fast' : 'Cloud'
-                                    });
-                                }
-                            });
-                            renderAntigravityModelMenu(MODEL_CATALOG);
-                        }
-                    } catch (err) {
-                        console.log('Model sync notice:', err);
-                    }
-                }
-                syncServerModels();
             }
+
+            // Global Click to Close Dropdowns
+            document.addEventListener('click', (e) => {
+                if (chatgptModelTab && !chatgptModelTab.contains(e.target)) {
+                    chatgptModelTab.classList.remove('open');
+                }
+                if (modelPicker && !modelPicker.contains(e.target)) {
+                    modelPicker.classList.remove('open');
+                    if (modelMenu) modelMenu.classList.remove('open');
+                }
+            });
+
+            // Initial render of both menus
+            renderAntigravityModelMenu(MODEL_CATALOG);
+
+            async function syncServerModels() {
+                try {
+                    const res = await fetch('/api/research/models');
+                    if (res.ok) {
+                        const serverModels = await res.json();
+                        serverModels.forEach(sm => {
+                            if (!MODEL_CATALOG.find(m => m.id === sm.id)) {
+                                MODEL_CATALOG.push({
+                                    id: sm.id,
+                                    name: sm.name,
+                                    provider: sm.provider,
+                                    badge: sm.provider === 'ollama' ? 'Local Fast' : 'Cloud'
+                                });
+                            }
+                        });
+                        renderAntigravityModelMenu(MODEL_CATALOG);
+                    }
+                } catch (err) {
+                    console.log('Model sync notice:', err);
+                }
+            }
+            syncServerModels();
 
             // Search Modal DOM Elements
             const historyTabBtn = document.getElementById('history-tab-btn');
@@ -1713,10 +1897,7 @@
                 });
             }
 
-            // --- MOBILE OFF-CANVAS DRAWER CONTROLS ---
-            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
-            const mobileNewChatBtn = document.getElementById('mobile-new-chat-btn');
-            const mobileBrandLogo = document.getElementById('mobile-brand-logo');
+            // --- DRAWER & TOP HEADER CONTROLS ---
             const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
             function openMobileSidebar() {
@@ -1729,16 +1910,20 @@
                 if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
             }
 
-            if (mobileSidebarToggle) mobileSidebarToggle.addEventListener('click', openMobileSidebar);
             if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar);
-            if (mobileNewChatBtn) {
-                mobileNewChatBtn.addEventListener('click', () => {
-                    startNewGeneralChat();
-                    closeMobileSidebar();
+
+            if (chatHeaderSidebarBtn) {
+                chatHeaderSidebarBtn.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        openMobileSidebar();
+                    } else {
+                        toggleSidebar(false);
+                    }
                 });
             }
-            if (mobileBrandLogo) {
-                mobileBrandLogo.addEventListener('click', () => {
+
+            if (headerNewChatBtn) {
+                headerNewChatBtn.addEventListener('click', () => {
                     startNewGeneralChat();
                     closeMobileSidebar();
                 });
