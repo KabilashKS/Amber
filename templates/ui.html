@@ -32,7 +32,10 @@
         body {
             background: linear-gradient(135deg, #0b0f19 0%, #1a1625 50%, #0d1423 100%);
             color: var(--text-main);
+            min-height: 100vh;
+            min-height: 100dvh;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             overflow: hidden;
             padding: 20px;
@@ -1145,9 +1148,240 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ========================================================= */
+        /* RESPONSIVE DESIGN FOR MOBILE & TABLET (Modern Web Best Practice) */
+        /* ========================================================= */
+        .mobile-header {
+            display: none;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                gap: 0;
+                flex-direction: column;
+                height: 100dvh;
+                min-height: 100dvh;
+                width: 100vw;
+                overflow: hidden;
+            }
+
+            /* Sleek Mobile App Header */
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                background: rgba(18, 20, 28, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--glass-border);
+                z-index: 50;
+                flex-shrink: 0;
+            }
+
+            .mobile-header-brand {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                cursor: pointer;
+            }
+
+            .mobile-header-brand .logo-img {
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+                filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25));
+            }
+
+            .mobile-header-brand .logo-text {
+                font-family: 'Iceland', cursive;
+                font-size: 1.8rem;
+                font-weight: 600;
+                letter-spacing: 1px;
+                color: var(--text-bright);
+                line-height: 1;
+            }
+
+            .mobile-icon-btn {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid var(--glass-border);
+                color: var(--text-bright);
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.95rem;
+                cursor: pointer;
+                transition: background 0.15s, transform 0.1s;
+            }
+
+            .mobile-icon-btn:active {
+                transform: scale(0.95);
+                background: rgba(255, 255, 255, 0.12);
+            }
+
+            /* Off-canvas Slide-in Drawer Sidebar */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 82vw;
+                max-width: 320px;
+                min-width: unset;
+                height: 100dvh;
+                z-index: 1000;
+                transform: translateX(-105%);
+                transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+                border-radius: 0 16px 16px 0;
+                border-left: none;
+                box-shadow: 4px 0 30px rgba(0, 0, 0, 0.85);
+                background: #0f1118;
+                backdrop-filter: blur(28px);
+                -webkit-backdrop-filter: blur(28px);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            /* Backdrop dimmer for off-canvas drawer */
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.65);
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                z-index: 999;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+
+            .sidebar-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            /* Main Content Container takes full screen */
+            .main-content {
+                width: 100%;
+                height: 100%;
+                flex: 1;
+                border-radius: 0;
+                border: none;
+                overflow: hidden;
+            }
+
+            /* Chat Stream Area */
+            .chat-container {
+                padding: 16px 12px;
+                gap: 16px;
+            }
+
+            .message-wrapper {
+                max-width: 96%;
+            }
+
+            .message-bubble {
+                padding: 12px 14px;
+                font-size: 0.92rem;
+                line-height: 1.55;
+            }
+
+            .message-bubble table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .message-bubble pre {
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .edit-container {
+                min-width: 0;
+                width: 100%;
+            }
+
+            /* Compact Mobile Input Row */
+            .input-container {
+                margin: 0 8px 10px 8px;
+                padding: 6px 10px;
+                gap: 8px;
+                border-radius: 20px;
+            }
+
+            .input-container input {
+                font-size: 0.92rem;
+                padding: 6px 4px;
+            }
+
+            .antigravity-model-btn {
+                padding: 5px 8px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+
+            .send-btn {
+                padding: 8px 14px;
+                font-size: 0.88rem;
+                border-radius: 16px;
+                flex-shrink: 0;
+            }
+
+            /* Model Popover on Mobile */
+            .antigravity-model-menu {
+                width: calc(100vw - 24px);
+                max-width: 340px;
+                left: 0;
+                bottom: calc(100% + 8px);
+            }
+
+            /* Direct PDF Ready Card on Mobile */
+            .pdf-direct-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .pdf-direct-card .download-pdf-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #model-display-name {
+                display: none; /* Keep model icon + sparkle on narrow phones */
+            }
+            .send-btn .send-text {
+                display: none; /* Just paper plane icon */
+            }
+            .send-btn {
+                padding: 8px 12px;
+            }
+            .chat-container {
+                padding: 12px 8px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Mobile Backdrop Overlay for Off-Canvas Navigation Drawer -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <aside class="sidebar glass-panel" id="app-sidebar">
         
         <div class="sidebar-header">
@@ -1235,6 +1469,20 @@
     </div>
 
     <main class="main-content glass-panel">
+        <!-- Sleek Responsive Mobile Top Bar -->
+        <div class="mobile-header">
+            <button class="mobile-icon-btn" id="mobile-sidebar-toggle" title="Open Navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mobile-header-brand" id="mobile-brand-logo" title="AMBER Research AI">
+                <img src="/api/research/logo" class="logo-img" alt="AMBER">
+                <span class="logo-text">MBER</span>
+            </div>
+            <button class="mobile-icon-btn" id="mobile-new-chat-btn" title="New Chat">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
         <div class="chat-container"></div>
 
         <!-- Antigravity-Style Prompt Box with Model Picker & Send/Stop Control -->
@@ -1256,7 +1504,7 @@
                 <input type="hidden" id="selected-model-id" value="nvidia_llama">
             </div>
             <input type="text" id="chat-input" placeholder="Ask AMBER...">
-            <button class="send-btn" id="send-btn" title="Send research prompt">Send <i class="fa-solid fa-paper-plane"></i></button>
+            <button class="send-btn" id="send-btn" title="Send research prompt"><span class="send-text">Send</span> <i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </main>
 
@@ -1465,6 +1713,37 @@
                 });
             }
 
+            // --- MOBILE OFF-CANVAS DRAWER CONTROLS ---
+            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            const mobileNewChatBtn = document.getElementById('mobile-new-chat-btn');
+            const mobileBrandLogo = document.getElementById('mobile-brand-logo');
+            const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+            function openMobileSidebar() {
+                sidebar.classList.add('mobile-open');
+                if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+            }
+
+            function closeMobileSidebar() {
+                sidebar.classList.remove('mobile-open');
+                if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+            }
+
+            if (mobileSidebarToggle) mobileSidebarToggle.addEventListener('click', openMobileSidebar);
+            if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+            if (mobileNewChatBtn) {
+                mobileNewChatBtn.addEventListener('click', () => {
+                    startNewGeneralChat();
+                    closeMobileSidebar();
+                });
+            }
+            if (mobileBrandLogo) {
+                mobileBrandLogo.addEventListener('click', () => {
+                    startNewGeneralChat();
+                    closeMobileSidebar();
+                });
+            }
+
             // --- BACK / FORWARD CONVERSATION NAVIGATION ---
             function updateNavButtons() {
                 navBackBtn.classList.toggle('disabled', navHistoryIndex <= 0);
@@ -1521,6 +1800,7 @@
                 renderFilteredConversations();
                 renderProjectsSidebar();
                 showWelcomeScreen();
+                closeMobileSidebar();
                 inputField.focus();
             }
 
@@ -2211,6 +2491,7 @@
 
             // 2. Fetch and render messages for a specific conversation thread
             async function loadConversationMessages(convId, title) {
+                closeMobileSidebar();
                 chatContainer.innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); animation: fadeIn 0.3s;">
                         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 16px;"></i>
@@ -2255,7 +2536,7 @@
                 isResearching = false;
                 sendBtn.classList.remove('stop-btn');
                 sendBtn.disabled = false;
-                sendBtn.innerHTML = `Send <i class="fa-solid fa-paper-plane"></i>`;
+                sendBtn.innerHTML = `<span class="send-text">Send</span> <i class="fa-solid fa-paper-plane"></i>`;
                 sendBtn.title = "Send research prompt";
             }
 
@@ -2263,7 +2544,7 @@
                 isResearching = true;
                 sendBtn.classList.add('stop-btn');
                 sendBtn.disabled = false;
-                sendBtn.innerHTML = `<i class="fa-solid fa-square"></i> Stop`;
+                sendBtn.innerHTML = `<i class="fa-solid fa-square"></i> <span class="send-text">Stop</span>`;
                 sendBtn.title = "Stop research immediately";
             }
 
