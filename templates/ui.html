@@ -1150,20 +1150,20 @@
         }
 
         /* ========================================================= */
-        /* CHATGPT-STYLE TOP HEADER & MODEL SELECTOR TAB */
+        /* CHATGPT-STYLE TOP HEADER & UNIQUE SHARE OPTION */
         /* ========================================================= */
         .chat-top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 20px;
+            padding: 10px 22px;
             background: rgba(18, 20, 28, 0.45);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--glass-border);
             z-index: 40;
             flex-shrink: 0;
-            min-height: 56px;
+            min-height: 54px;
         }
 
         .chat-top-left {
@@ -1172,130 +1172,176 @@
             gap: 12px;
         }
 
-        /* Sidebar toggle button in chat header (desktop collapsed or mobile) */
-        .header-sidebar-toggle-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            display: none;
+        .top-brand {
+            display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 2px;
             cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.95rem;
-        }
-        .header-sidebar-toggle-btn:hover {
-            color: var(--text-bright);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        /* When desktop sidebar is collapsed, reveal expand button in top-bar */
-        .sidebar.collapsed ~ .main-content .header-sidebar-toggle-btn {
-            display: inline-flex;
-        }
-
-        /* ChatGPT-Style Model Selector Tab */
-        .chatgpt-model-tab {
-            position: relative;
-            display: inline-flex;
             user-select: none;
         }
 
-        .model-tab-btn {
+        .top-brand .logo-img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.25));
+        }
+
+        .top-brand .logo-text {
+            font-family: 'Iceland', cursive;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-bright);
+            line-height: 1;
+        }
+
+        /* Unique ChatGPT Share Button */
+        .chat-share-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 12px;
-            padding: 6px 12px;
+            gap: 7px;
+            background: rgba(45, 212, 191, 0.08);
+            border: 1px solid rgba(45, 212, 191, 0.3);
+            color: #5eead4;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text-bright);
-            font-size: 1.05rem;
-            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .model-tab-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.12);
+        .chat-share-btn:hover {
+            background: rgba(45, 212, 191, 0.18);
+            border-color: #2dd4bf;
+            box-shadow: 0 0 14px rgba(45, 212, 191, 0.3);
+            transform: translateY(-1px);
         }
-        .model-tab-btn .model-brand-prefix {
-            font-family: 'Iceland', cursive;
-            font-size: 1.45rem;
-            color: var(--text-bright);
-            letter-spacing: 0.5px;
+        .chat-share-btn svg {
+            stroke: #5eead4;
+        }
+
+        /* Unique Futuristic Robot Icon in Model Selector */
+        .unique-robo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #2dd4bf;
+            filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.6));
+            transition: transform 0.2s ease;
+        }
+        .antigravity-model-btn:hover .unique-robo-icon {
+            transform: scale(1.1);
+        }
+
+        /* ChatGPT Share Modal Styling */
+        .share-modal {
+            width: 480px;
+            max-width: 92vw;
+            padding: 0;
+            background: rgba(18, 20, 28, 0.96);
+            border: 1px solid rgba(45, 212, 191, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(45, 212, 191, 0.15);
+        }
+        .share-modal-header {
+            padding: 20px 24px 14px 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .share-modal-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-        }
-        .model-tab-btn .model-brand-prefix img {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 6px rgba(45, 212, 191, 0.3));
-        }
-        .model-tab-btn .model-tab-divider {
-            color: var(--text-muted);
-            opacity: 0.4;
-            font-weight: 300;
-            margin: 0 1px;
-        }
-        .model-tab-btn .model-tab-name {
-            color: #5eead4;
-            font-size: 0.95rem;
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary-color);
+            background: rgba(45, 212, 191, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
-            transition: color 0.2s ease;
         }
-        .model-tab-btn .chevron {
-            font-size: 0.72rem;
+        .share-modal-header h3 {
+            font-size: 1.2rem;
+            color: var(--text-bright);
+            margin: 0 0 4px 0;
+            font-weight: 600;
+        }
+        .share-modal-subtitle {
+            font-size: 0.85rem;
             color: var(--text-muted);
-            transition: transform 0.2s ease;
-            margin-left: 2px;
+            margin: 0;
         }
-        .chatgpt-model-tab.open .chevron {
-            transform: rotate(180deg);
-        }
-
-        /* Top Dropdown Popover */
-        .model-tab-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            width: 360px;
-            max-width: 92vw;
-            max-height: 420px;
-            background: #14161f;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2);
+        .share-modal-body {
+            padding: 20px 24px 24px 24px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            z-index: 10001;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-6px) scale(0.97);
-            pointer-events: none;
-            transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-                        visibility 0.18s;
+            gap: 16px;
         }
-        .chatgpt-model-tab.open .model-tab-dropdown {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-
-        .chat-top-right {
+        .share-link-group {
             display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 6px 6px 6px 14px;
             align-items: center;
+        }
+        .share-link-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #94a3b8;
+            font-size: 0.86rem;
+            text-overflow: ellipsis;
+        }
+        .share-copy-btn {
+            background: linear-gradient(135deg, #2dd4bf, #3b82f6);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.82rem;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .share-copy-btn:hover {
+            box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
+            transform: translateY(-1px);
+        }
+        .share-export-actions {
+            display: flex;
             gap: 10px;
+        }
+        .share-export-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-bright);
+            font-size: 0.82rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .share-export-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(45, 212, 191, 0.4);
+            color: #5eead4;
         }
 
         .sidebar-backdrop {
@@ -1314,33 +1360,15 @@
             }
 
             .chat-top-bar {
-                padding: 8px 12px;
-                min-height: 50px;
+                padding: 8px 14px;
+                min-height: 48px;
                 background: rgba(18, 20, 28, 0.85);
             }
 
-            .header-sidebar-toggle-btn {
-                display: inline-flex !important;
-            }
-
-            .model-tab-btn {
-                padding: 4px 8px;
-                font-size: 0.92rem;
-                gap: 6px;
-            }
-            .model-tab-btn .model-brand-prefix {
-                font-size: 1.25rem;
-            }
-            .model-tab-btn .model-brand-prefix img {
-                width: 20px;
-                height: 20px;
-            }
-            .model-tab-btn .model-tab-name {
-                font-size: 0.88rem;
-                max-width: 160px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+            .chat-share-btn {
+                padding: 5px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
             }
 
             /* Off-canvas Slide-in Drawer Sidebar */
@@ -1397,20 +1425,58 @@
                 overflow: hidden;
             }
 
-            /* Chat Stream Area */
+            /* Chat Stream Area - Elegant Readable Mobile Typography */
             .chat-container {
-                padding: 16px 12px;
-                gap: 16px;
+                padding: 14px 12px;
+                gap: 14px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
             }
 
             .message-wrapper {
-                max-width: 96%;
+                max-width: 100%;
             }
 
             .message-bubble {
                 padding: 12px 14px;
+                font-size: 0.88rem;
+                line-height: 1.58;
+                border-radius: 14px;
+            }
+
+            .message-bubble h1 {
+                font-size: 1.08rem;
+                margin-top: 10px;
+                margin-bottom: 6px;
+                line-height: 1.35;
+            }
+
+            .message-bubble h2 {
+                font-size: 0.98rem;
+                margin-top: 10px;
+                margin-bottom: 6px;
+                color: #5eead4;
+                line-height: 1.35;
+            }
+
+            .message-bubble h3 {
                 font-size: 0.92rem;
+                margin-top: 8px;
+                margin-bottom: 4px;
+                line-height: 1.3;
+            }
+
+            .message-bubble p {
+                font-size: 0.88rem;
+                line-height: 1.58;
+                margin-bottom: 8px;
+                color: #e2e8f0;
+            }
+
+            .message-bubble li {
+                font-size: 0.88rem;
                 line-height: 1.55;
+                margin-bottom: 4px;
             }
 
             .message-bubble table {
@@ -1418,12 +1484,15 @@
                 max-width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                font-size: 0.8rem;
             }
 
             .message-bubble pre {
                 max-width: 100%;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                padding: 10px;
+                font-size: 0.82rem;
             }
 
             .edit-container {
@@ -1440,7 +1509,7 @@
             }
 
             .input-container input {
-                font-size: 0.92rem;
+                font-size: 0.88rem;
                 padding: 6px 4px;
             }
 
@@ -1448,6 +1517,15 @@
                 padding: 5px 8px;
                 font-size: 0.78rem;
                 gap: 5px;
+            }
+
+            #model-display-name {
+                display: inline-block !important;
+                max-width: 110px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 0.78rem;
             }
 
             .send-btn {
@@ -1478,15 +1556,9 @@
         }
 
         @media (max-width: 480px) {
-            .model-tab-btn .model-brand-prefix span {
-                display: none; /* Hide 'MBER' text on ultra-narrow phones, keeping logo icon + model name */
-            }
-            .model-tab-btn .model-tab-name {
-                max-width: 140px;
-                font-size: 0.84rem;
-            }
             #model-display-name {
-                display: none; /* In bottom prompt bar, keep model icon on narrow phones */
+                max-width: 90px;
+                font-size: 0.75rem;
             }
             .send-btn .send-text {
                 display: none; /* Just paper plane icon */
@@ -1518,12 +1590,6 @@
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="9" y1="3" x2="9" y2="21"></line>
                     </svg>
-                </button>
-                <button class="header-icon-btn disabled" id="nav-back-btn" title="Previous Conversation">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <button class="header-icon-btn disabled" id="nav-forward-btn" title="Next Conversation">
-                    <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </div>
@@ -1590,40 +1656,55 @@
         </div>
     </div>
 
+    <!-- Unique ChatGPT Share Research Modal -->
+    <div class="modal-overlay" id="share-modal-overlay">
+        <div class="chatgpt-modal share-modal">
+            <div class="share-modal-header">
+                <div>
+                    <div class="share-modal-badge"><i class="fa-solid fa-arrow-up-from-bracket"></i> Share Research</div>
+                    <h3 id="share-modal-topic-title">Share Research Report</h3>
+                    <p class="share-modal-subtitle">Share this deep research synthesis with your team or recruiters.</p>
+                </div>
+                <button class="modal-close-btn" id="close-share-modal-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="share-modal-body">
+                <div class="share-link-group">
+                    <input type="text" id="share-link-input" readonly value="">
+                    <button class="share-copy-btn" id="share-copy-btn">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy Link</span>
+                    </button>
+                </div>
+                <div class="share-export-actions">
+                    <button class="share-export-btn" id="share-copy-markdown-btn">
+                        <i class="fa-brands fa-markdown"></i> Copy as Markdown
+                    </button>
+                    <a href="/api/research/download-pdf" target="_blank" class="share-export-btn" id="share-download-pdf-btn">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="main-content glass-panel">
-        <!-- ChatGPT-Style Top Header Bar with Model Selector Tab -->
+        <!-- Sleek Top Header with Unique Share Action (ChatGPT Style) -->
         <header class="chat-top-bar" id="chat-top-bar">
             <div class="chat-top-left">
-                <!-- Sidebar Toggle for Mobile & Collapsed Desktop -->
-                <button class="header-sidebar-toggle-btn" id="chat-header-sidebar-btn" title="Toggle Navigation">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                
-                <!-- ChatGPT-Style Model Selector Tab -->
-                <div class="chatgpt-model-tab" id="chatgpt-model-tab">
-                    <button class="model-tab-btn" id="header-model-btn" type="button" title="Select AI Model">
-                        <span class="model-brand-prefix">
-                            <img src="/api/research/logo" alt="Logo">
-                            <span>MBER</span>
-                        </span>
-                        <span class="model-tab-divider">·</span>
-                        <span class="model-tab-name" id="header-model-name">Llama 3.2 11B Vision</span>
-                        <i class="fa-solid fa-chevron-down chevron"></i>
-                    </button>
-                    <div class="model-tab-dropdown" id="model-tab-dropdown">
-                        <div class="model-menu-header">
-                            <span>Model</span>
-                        </div>
-                        <div class="model-menu-list" id="header-model-menu-list">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-                    </div>
+                <div class="top-brand" id="top-brand-logo" title="AMBER Research AI">
+                    <img src="/api/research/logo" class="logo-img" alt="AMBER">
+                    <span class="logo-text">MBER</span>
                 </div>
             </div>
 
             <div class="chat-top-right">
-                <button class="header-icon-btn" id="header-new-chat-btn" title="New Conversation">
-                    <i class="fa-solid fa-plus"></i>
+                <button class="chat-share-btn" id="chat-share-btn" title="Share research thread">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Share</span>
                 </button>
             </div>
         </header>
@@ -1634,7 +1715,15 @@
         <div class="input-container">
             <div class="antigravity-model-picker" id="antigravity-model-picker">
                 <div class="antigravity-model-btn" id="model-picker-btn" title="Select AI Model">
-                    <i class="fa-solid fa-wand-magic-sparkles sparkle-icon" id="model-picker-icon"></i>
+                    <span class="unique-robo-icon" id="model-picker-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="10" rx="3"></rect>
+                            <circle cx="12" cy="5" r="2"></circle>
+                            <path d="M12 7v4"></path>
+                            <line x1="8" y1="16" x2="8.01" y2="16"></line>
+                            <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                        </svg>
+                    </span>
                     <span id="model-display-name">Llama 3.2 11B Vision</span>
                     <i class="fa-solid fa-chevron-down chevron"></i>
                 </div>
@@ -1666,8 +1755,18 @@
             const newChatBtn = document.querySelector('.new-chat-btn');
             const inputField = document.getElementById('chat-input');
             const sendBtn = document.getElementById('send-btn');
-            // Antigravity Model Picker Elements
-            // Antigravity Model Picker Elements (Bottom Bar & Top Header Tab)
+            const topBrandLogo = document.getElementById('top-brand-logo');
+
+            // Top Header Share Modal Elements
+            const chatShareBtn = document.getElementById('chat-share-btn');
+            const shareModalOverlay = document.getElementById('share-modal-overlay');
+            const closeShareModalBtn = document.getElementById('close-share-modal-btn');
+            const shareLinkInput = document.getElementById('share-link-input');
+            const shareCopyBtn = document.getElementById('share-copy-btn');
+            const shareCopyMarkdownBtn = document.getElementById('share-copy-markdown-btn');
+            const shareModalTopicTitle = document.getElementById('share-modal-topic-title');
+
+            // Prompt Tab Model Picker Elements
             const modelPicker = document.getElementById('antigravity-model-picker');
             const modelPickerBtn = document.getElementById('model-picker-btn');
             const modelMenu = document.getElementById('antigravity-model-menu');
@@ -1676,23 +1775,15 @@
             const modelPickerIcon = document.getElementById('model-picker-icon');
             const selectedModelInput = document.getElementById('selected-model-id');
 
-            // ChatGPT-Style Top Header Model Tab Elements
-            const chatgptModelTab = document.getElementById('chatgpt-model-tab');
-            const headerModelBtn = document.getElementById('header-model-btn');
-            const headerModelName = document.getElementById('header-model-name');
-            const headerModelMenuList = document.getElementById('header-model-menu-list');
-            const chatHeaderSidebarBtn = document.getElementById('chat-header-sidebar-btn');
-            const headerNewChatBtn = document.getElementById('header-new-chat-btn');
-
             const MODEL_CATALOG = [
-                { id: "meta_muse", name: "Muse 30B", provider: "nvidia", tier: "Fast", context: "Fast · Quick creative & technical research" },
-                { id: "nvidia_llama", name: "Llama 3.2 11B Vision", provider: "nvidia", tier: "Light", context: "Light · Multimodal vision & efficient retrieval" },
+                { id: "meta_muse", name: "Muse 30B", provider: "meta", tier: "Fast", context: "Fast · Quick creative & technical research" },
+                { id: "nvidia_llama", name: "Llama 3.2 11B Vision", provider: "meta", tier: "Light", context: "Light · Multimodal vision & efficient retrieval" },
                 { id: "nvidia_nemotron_lightning", name: "Nemotron 30B Lightning", provider: "nvidia", tier: "Fast", context: "Fast · Sub-second rapid search synthesis" },
-                { id: "openai_gpt_oss", name: "GPT-OSS 20B", provider: "nvidia", tier: "Light", context: "Light · Open architecture knowledge core" },
-                { id: "nvidia_deepseek", name: "DeepSeek V4.1 Flash", provider: "nvidia", tier: "Medium", context: "Medium · Complex logic & scientific deduction" },
-                { id: "google_gemma4", name: "Gemma 4 31B IT", provider: "nvidia", tier: "Medium", context: "Medium · High-accuracy reasoning & citations" },
+                { id: "openai_gpt_oss", name: "GPT-OSS 20B", provider: "openai", tier: "Light", context: "Light · Open architecture knowledge core" },
+                { id: "nvidia_deepseek", name: "DeepSeek V4.1 Flash", provider: "deepseek", tier: "Medium", context: "Medium · Complex logic & scientific deduction" },
+                { id: "google_gemma4", name: "Gemma 4 31B IT", provider: "google", tier: "Medium", context: "Medium · High-accuracy reasoning & citations" },
                 { id: "nvidia_nemotron_super", name: "Nemotron 120B Super", provider: "nvidia", tier: "Medium", context: "Medium · Balanced multi-domain analysis" },
-                { id: "moonshot_kimi", name: "Moonshot Kimi K3", provider: "nvidia", tier: "Heavy", context: "Heavy · Massive context & deep literature memory" },
+                { id: "moonshot_kimi", name: "Moonshot Kimi K3", provider: "moonshot", tier: "Heavy", context: "Heavy · Massive context & deep literature memory" },
                 { id: "nvidia_nemotron_ultra", name: "Nemotron 550B Ultra", provider: "nvidia", tier: "Heavy", context: "Heavy · Frontier enterprise research intelligence" },
                 { id: "gemini", name: "Gemini 1.5 Flash", provider: "google", tier: "Fast", context: "Fast · Cloud sub-second real-time streaming" }
             ];
@@ -1700,77 +1791,42 @@
             function populateModelListToContainer(container, models) {
                 if (!container) return;
                 container.innerHTML = '';
-                const groups = {
-                    nvidia: { title: "NVIDIA NIM Cloud", items: [] },
-                    google: { title: "Google Cloud", items: [] }
-                };
 
                 models.forEach(m => {
-                    const grp = groups[m.provider] || groups.nvidia;
-                    grp.items.push(m);
-                });
-
-                Object.values(groups).forEach(g => {
-                    if (g.items.length === 0) return;
-                    const groupTitle = document.createElement('div');
-                    groupTitle.className = 'model-menu-group-title';
-                    groupTitle.textContent = g.title;
-                    container.appendChild(groupTitle);
-
-                    g.items.forEach(m => {
-                        const isSelected = (selectedModelInput.value === m.id);
-                        const row = document.createElement('div');
-                        row.className = 'model-menu-item' + (isSelected ? ' selected' : '');
-                        row.innerHTML = `
-                            <div class="model-menu-item-left">
-                                <div class="model-item-info">
-                                    <div class="model-item-title">${escapeHtml(m.name)}</div>
-                                    <div class="model-item-context">${escapeHtml(m.context || m.desc || '')}</div>
-                                </div>
+                    const isSelected = (selectedModelInput.value === m.id);
+                    const row = document.createElement('div');
+                    row.className = 'model-menu-item' + (isSelected ? ' selected' : '');
+                    row.innerHTML = `
+                        <div class="model-menu-item-left">
+                            <div class="model-item-info">
+                                <div class="model-item-title">${escapeHtml(m.name)}</div>
+                                <div class="model-item-context">${escapeHtml(m.context || m.desc || '')}</div>
                             </div>
-                            <div class="model-menu-item-right">
-                                <span class="model-badge">${escapeHtml(m.tier || m.badge || 'Fast')}</span>
-                                <i class="fa-solid fa-check model-menu-check"></i>
-                            </div>
-                        `;
-                        row.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            selectAntigravityModel(m);
-                        });
-                        container.appendChild(row);
+                        </div>
+                        <div class="model-menu-item-right">
+                            <span class="model-badge">${escapeHtml(m.tier || m.badge || 'Fast')}</span>
+                            <i class="fa-solid fa-check model-menu-check"></i>
+                        </div>
+                    `;
+                    row.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectAntigravityModel(m);
                     });
+                    container.appendChild(row);
                 });
             }
 
             function renderAntigravityModelMenu(models) {
                 populateModelListToContainer(modelMenuList, models);
-                populateModelListToContainer(headerModelMenuList, models);
             }
 
             function selectAntigravityModel(m) {
                 selectedModelInput.value = m.id;
                 if (modelDisplayName) modelDisplayName.textContent = m.name;
-                if (headerModelName) headerModelName.textContent = m.name;
                 document.title = "AMBER · " + m.name;
                 if (modelPicker) modelPicker.classList.remove('open');
                 if (modelMenu) modelMenu.classList.remove('open');
-                if (chatgptModelTab) chatgptModelTab.classList.remove('open');
                 renderAntigravityModelMenu(MODEL_CATALOG);
-            }
-
-            // Top Header Model Tab Trigger
-            if (headerModelBtn && chatgptModelTab) {
-                headerModelBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = chatgptModelTab.classList.contains('open');
-                    if (isOpen) {
-                        chatgptModelTab.classList.remove('open');
-                    } else {
-                        if (modelPicker) modelPicker.classList.remove('open');
-                        if (modelMenu) modelMenu.classList.remove('open');
-                        chatgptModelTab.classList.add('open');
-                    }
-                });
             }
 
             // Bottom Input Bar Model Picker Trigger
@@ -1782,7 +1838,6 @@
                         modelPicker.classList.remove('open');
                         modelMenu.classList.remove('open');
                     } else {
-                        if (chatgptModelTab) chatgptModelTab.classList.remove('open');
                         modelPicker.classList.add('open');
                         modelMenu.classList.add('open');
                     }
@@ -1791,16 +1846,13 @@
 
             // Global Click to Close Dropdowns
             document.addEventListener('click', (e) => {
-                if (chatgptModelTab && !chatgptModelTab.contains(e.target)) {
-                    chatgptModelTab.classList.remove('open');
-                }
                 if (modelPicker && !modelPicker.contains(e.target)) {
                     modelPicker.classList.remove('open');
                     if (modelMenu) modelMenu.classList.remove('open');
                 }
             });
 
-            // Initial render of both menus
+            // Initial render of prompt bar model picker menu
             renderAntigravityModelMenu(MODEL_CATALOG);
 
             async function syncServerModels() {
@@ -1912,27 +1964,83 @@
 
             if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar);
 
-            if (chatHeaderSidebarBtn) {
-                chatHeaderSidebarBtn.addEventListener('click', () => {
+            if (topBrandLogo) {
+                topBrandLogo.addEventListener('click', () => {
                     if (window.innerWidth <= 768) {
                         openMobileSidebar();
                     } else {
-                        toggleSidebar(false);
+                        startNewGeneralChat();
                     }
                 });
             }
 
-            if (headerNewChatBtn) {
-                headerNewChatBtn.addEventListener('click', () => {
-                    startNewGeneralChat();
-                    closeMobileSidebar();
+            // --- CHATGPT-STYLE SHARE RESEARCH MODAL ---
+            function openShareModal() {
+                if (shareModalOverlay) {
+                    shareModalOverlay.classList.add('open');
+                    const activeConv = allConversationsCache.find(c => c.id === activeConversationId);
+                    if (shareModalTopicTitle) {
+                        shareModalTopicTitle.textContent = (activeConv && activeConv.title) ? activeConv.title : 'AMBER Research Synthesis';
+                    }
+                    if (shareLinkInput) {
+                        const base = window.location.origin + window.location.pathname;
+                        shareLinkInput.value = activeConversationId 
+                            ? `${base}?chat=${encodeURIComponent(activeConversationId)}` 
+                            : window.location.href;
+                    }
+                }
+            }
+
+            function closeShareModal() {
+                if (shareModalOverlay) shareModalOverlay.classList.remove('open');
+            }
+
+            if (chatShareBtn) chatShareBtn.addEventListener('click', openShareModal);
+            if (closeShareModalBtn) closeShareModalBtn.addEventListener('click', closeShareModal);
+            if (shareModalOverlay) {
+                shareModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === shareModalOverlay) closeShareModal();
                 });
             }
 
-            // --- BACK / FORWARD CONVERSATION NAVIGATION ---
+            if (shareCopyBtn && shareLinkInput) {
+                shareCopyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(shareLinkInput.value);
+                    } catch (err) {
+                        shareLinkInput.select();
+                        document.execCommand('copy');
+                    }
+                    const origHtml = shareCopyBtn.innerHTML;
+                    shareCopyBtn.innerHTML = `<i class="fa-solid fa-check"></i><span>Copied!</span>`;
+                    setTimeout(() => { shareCopyBtn.innerHTML = origHtml; }, 2000);
+                });
+            }
+
+            if (shareCopyMarkdownBtn) {
+                shareCopyMarkdownBtn.addEventListener('click', async () => {
+                    const botBubbles = Array.from(chatContainer.querySelectorAll('.message-wrapper.bot .message-bubble'));
+                    let mdText = '';
+                    if (botBubbles.length > 0) {
+                        mdText = botBubbles.map(b => b.innerText).join('\n\n---\n\n');
+                    } else {
+                        mdText = '# AMBER Research AI\nAccelerated Multi-Agent Deep Research System.';
+                    }
+                    try {
+                        await navigator.clipboard.writeText(mdText);
+                    } catch (err) {
+                        console.error('Failed to copy markdown:', err);
+                    }
+                    const origHtml = shareCopyMarkdownBtn.innerHTML;
+                    shareCopyMarkdownBtn.innerHTML = `<i class="fa-solid fa-check"></i> Markdown Copied!`;
+                    setTimeout(() => { shareCopyMarkdownBtn.innerHTML = origHtml; }, 2000);
+                });
+            }
+
+            // --- BACK / FORWARD CONVERSATION NAVIGATION (Safely guarded) ---
             function updateNavButtons() {
-                navBackBtn.classList.toggle('disabled', navHistoryIndex <= 0);
-                navForwardBtn.classList.toggle('disabled', navHistoryIndex >= navHistory.length - 1);
+                if (navBackBtn) navBackBtn.classList.toggle('disabled', navHistoryIndex <= 0);
+                if (navForwardBtn) navForwardBtn.classList.toggle('disabled', navHistoryIndex >= navHistory.length - 1);
             }
 
             function pushToNavHistory(convId, title) {
@@ -1943,29 +2051,33 @@
                 updateNavButtons();
             }
 
-            navBackBtn.addEventListener('click', () => {
-                if (navHistoryIndex > 0) {
-                    navHistoryIndex--;
-                    const target = navHistory[navHistoryIndex];
-                    activeConversationId = target.id;
-                    renderFilteredConversations();
-                    renderProjectsSidebar();
-                    loadConversationMessages(target.id, target.title);
-                    updateNavButtons();
-                }
-            });
+            if (navBackBtn) {
+                navBackBtn.addEventListener('click', () => {
+                    if (navHistoryIndex > 0) {
+                        navHistoryIndex--;
+                        const target = navHistory[navHistoryIndex];
+                        activeConversationId = target.id;
+                        renderFilteredConversations();
+                        renderProjectsSidebar();
+                        loadConversationMessages(target.id, target.title);
+                        updateNavButtons();
+                    }
+                });
+            }
 
-            navForwardBtn.addEventListener('click', () => {
-                if (navHistoryIndex < navHistory.length - 1) {
-                    navHistoryIndex++;
-                    const target = navHistory[navHistoryIndex];
-                    activeConversationId = target.id;
-                    renderFilteredConversations();
-                    renderProjectsSidebar();
-                    loadConversationMessages(target.id, target.title);
-                    updateNavButtons();
-                }
-            });
+            if (navForwardBtn) {
+                navForwardBtn.addEventListener('click', () => {
+                    if (navHistoryIndex < navHistory.length - 1) {
+                        navHistoryIndex++;
+                        const target = navHistory[navHistoryIndex];
+                        activeConversationId = target.id;
+                        renderFilteredConversations();
+                        renderProjectsSidebar();
+                        loadConversationMessages(target.id, target.title);
+                        updateNavButtons();
+                    }
+                });
+            }
 
             function showWelcomeScreen() {
                 updateInputPlaceholder();
@@ -2072,8 +2184,9 @@
                     e.preventDefault();
                     openSearchModal();
                 } else if (e.key === 'Escape') {
-                    if (searchModalOverlay.classList.contains('open')) closeSearchModal();
-                    if (projectModalOverlay.classList.contains('open')) closeProjectModal();
+                    if (searchModalOverlay && searchModalOverlay.classList.contains('open')) closeSearchModal();
+                    if (projectModalOverlay && projectModalOverlay.classList.contains('open')) closeProjectModal();
+                    if (shareModalOverlay && shareModalOverlay.classList.contains('open')) closeShareModal();
                 }
             });
 
@@ -3007,10 +3120,26 @@
                 }
             });
 
-            // Initialize on page load (load conversations & projects cleanly)
+            // Initialize on page load (defaults to fresh new chat welcome screen or loads shared chat via query param)
             async function initializeApp() {
-                await loadConversationsList(true);
+                const urlParams = new URLSearchParams(window.location.search);
+                const sharedChatId = urlParams.get('chat');
+                
+                await loadConversationsList(false);
                 await loadProjectsList();
+
+                if (sharedChatId) {
+                    const foundConv = allConversationsCache.find(c => String(c.id) === String(sharedChatId));
+                    if (foundConv) {
+                        activeConversationId = foundConv.id;
+                        renderFilteredConversations();
+                        renderProjectsSidebar();
+                        loadConversationMessages(foundConv.id, foundConv.title);
+                        return;
+                    }
+                }
+
+                startNewGeneralChat();
             }
             initializeApp();
         });
