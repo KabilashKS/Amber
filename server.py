@@ -318,6 +318,85 @@ def check_pdf_intent(user_prompt: str) -> tuple[bool, str]:
 
     return False, prompt
 
+def resolve_contextual_topic(user_topic: str, prior_messages: list, conv_title: str) -> tuple[str, str, str, bool]:
+    """
+    Resolves multi-turn follow-up and refinement intents (e.g. 'make detailed report',
+    'explain more', 'what are the side effects', 'give more details', 'elaborate')
+    so that Amber behaves like ChatGPT: expanding on the active conversation's subject
+    rather than literally querying the user's meta-command on search engines.
+
+    Returns:
+        (effective_topic, search_query, contextual_directive, is_followup)
+    """
+    topic_clean = user_topic.strip()
+    lower = topic_clean.lower()
+
+    # If there are no prior messages, this is the very first query
+    if not prior_messages or len(prior_messages) <= 1:
+        return topic_clean, topic_clean, "", False
+
+    # Extract anchor topic from conversation title or earliest user prompt
+    anchor_topic = ""
+    if conv_title and conv_title.strip().lower() not in ("new chat", "new research", "untitled", "chat", ""):
+        anchor_topic = conv_title.strip()
+    else:
+        for m in prior_messages:
+            if m.sender == "user" and m.text.strip():
+                first_prompt = m.text.strip()
+                if len(first_prompt.split()) <= 12:
+                    anchor_topic = first_prompt
+                    break
+
+    if not anchor_topic:
+        anchor_topic = topic_clean
+
+    # 1. Broad expansion / detail request patterns (e.g. "make detailed report", "give detailed report", "detailed report")
+    detail_request_patterns = [
+        r"^(please\s+)?(make|give|provide|write|generate|create|build)?\s*(a\s+|an\s+|the\s+)?(detailed|in-depth|more\s+detailed|exhaustive|comprehensive|full|expanded|deeper)\s*(report|analysis|breakdown|summary|document|paper|overview|version)?[\.\!\?]?$",
+        r"^(make\s+it\s+detailed|make\s+it\s+more\s+detailed|make\s+detailed|detailed\s+report|give\s+detailed\s+report|make\s+a\s+detailed\s+report|give\s+a\s+detailed\s+report)[\.\!\?]?$",
+        r"^(please\s+)?(tell\s+me\s+more|explain\s+more|explain\s+in\s+detail|explain\s+further|elaborate(\s+more)?|expand\s+on\s+this|expand|go\s+deeper|deep\s+dive|give\s+more\s+details|more\s+details|more\s+info|more\s+information|continue|give\s+full\s+details)[\.\!\?]?$",
+        r"^(can\s+you\s+|could\s+you\s+|please\s+)?(make|give|provide|write)\s+(it\s+|a\s+)?(more\s+detailed|detailed\s+report|in-depth\s+report)[\.\!\?]?$",
+        r"^(what\s+about\s+(it|this|that)|tell\s+more\s+about\s+(it|this|that))[\.\!\?]?$",
+        r"^(make|give|provide)\s+(research|full)\s+report[\.\!\?]?$"
+    ]
+
+    is_detail_followup = any(re.search(pat, lower) for pat in detail_request_patterns)
+
+    # 2. Check for pronoun-based follow-ups (e.g. "what are its side effects", "how does it work", "history of this")
+    has_pronoun_reference = bool(re.search(r"\b(it|this|that|these|those|its)\b", lower)) and len(lower.split()) <= 8
+
+    # 3. Check if user prompt is a short subtopic phrase without mentioning anchor
+    common_subtopics = [
+        "side effects", "mechanism", "mechanisms", "mechanism of action", "clinical trials", "dosage",
+        "benefits", "risks", "history", "future", "applications", "uses", "types", "classification",
+        "alternatives", "pros and cons", "effectiveness", "resistance"
+    ]
+    is_subtopic_phrase = any(lower == st or lower.startswith(st + " ") or lower.endswith(" " + st) for st in common_subtopics)
+
+    if is_detail_followup:
+        effective_topic = f"{anchor_topic} (Comprehensive In-Depth Technical Report)"
+        search_query = f"{anchor_topic} comprehensive mechanisms in-depth scientific clinical analysis"
+        directive = (
+            f"\n\n### 🎯 CHATGPT MULTI-TURN CONTINUATION DIRECTIVE:\n"
+            f"The user previously received research on **'{anchor_topic}'** and has now requested: **'{topic_clean}'**.\n"
+            f"DO NOT search for or write a meta-guide on how to write a report. Instead, treat this as a direct instruction to expand deeply on **'{anchor_topic}'**.\n"
+            f"Deliver an exhaustive, textbook-grade long-form research report covering the biochemical/technical mechanisms, empirical data, clinical/industry benchmarks, and advanced nuances of **'{anchor_topic}'**.\n"
+        )
+        return effective_topic, search_query, directive, True
+
+    elif has_pronoun_reference or is_subtopic_phrase:
+        effective_topic = f"{anchor_topic} - {topic_clean}"
+        search_query = f"{anchor_topic} {topic_clean}"
+        directive = (
+            f"\n\n### 🎯 CHATGPT MULTI-TURN CONTINUATION DIRECTIVE:\n"
+            f"The user is asking a contextual follow-up inquiry: **'{topic_clean}'** regarding **'{anchor_topic}'**.\n"
+            f"Address this question with deep technical rigor specifically centered around **'{anchor_topic}'**.\n"
+        )
+        return effective_topic, search_query, directive, True
+
+    # Standalone new topic
+    return topic_clean, topic_clean, "", False
+
 @Research_AI.post("/chat")
 def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
         user_topic = request.user_topic.strip()
@@ -368,6 +447,17 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
             .where(Message.conversation_id == conv.id)
             .order_by(Message.id.asc())
         ).all()
+
+        # Update conversation title dynamically if it was a default placeholder ("New Chat", "New Research", etc.)
+        user_prior_msgs = [m for m in prior_messages if m.sender == "user"]
+        if (not user_prior_msgs or len(user_prior_msgs) == 0) and (not conv.title or conv.title.strip().lower() in ("new chat", "new research", "untitled", "")):
+            clean_title = re.sub(r'[\r\n\t]+', ' ', user_topic).strip()
+            clean_title = re.sub(r'\s{2,}', ' ', clean_title)[:60].strip()
+            if clean_title:
+                conv.title = clean_title
+                db.add(conv)
+                db.commit()
+                db.refresh(conv)
 
         history_context = ""
         if prior_messages:
@@ -450,16 +540,25 @@ def do_research(request: ResearchRequest, db: Session = Depends(get_session)):
                 }
 
         # Case B: Hybrid or Standard Research Request
-        research_topic = clean_topic if (is_pdf_cmd and clean_topic) else user_topic
+        raw_topic = clean_topic if (is_pdf_cmd and clean_topic) else user_topic
+
+        # Multi-turn Context Resolution (ChatGPT Behavior)
+        effective_topic, search_query, contextual_directive, is_followup = resolve_contextual_topic(
+            user_topic=raw_topic,
+            prior_messages=prior_messages,
+            conv_title=conv.title
+        )
+        research_topic = effective_topic
 
         # 2. Fast Direct Python Search (<0.8s) - Perplexity Architecture
-        print(f"🔍 [FAST PYTHON SEARCH] Directly querying live web & academic sources for: {research_topic}...")
-        search_context = execute_python_search(research_topic)
+        print(f"🔍 [FAST PYTHON SEARCH] Directly querying live web & academic sources for: {search_query} (Subject: {research_topic})...")
+        search_context = execute_python_search(search_query)
 
         # 3. Comprehensive, High-Detail Long-Form Synthesis Task Description
         task_description = (
             f"You are the Chief Technical Research Scientist and Lead Executive Editor.\n"
             f"Synthesize the verified real-world research sources into an exhaustive, highly detailed, textbook-quality research document on: {research_topic}{project_context}.\n"
+            f"{contextual_directive}\n"
             f"{history_context}\n"
             f"### 🌐 VERIFIED SEARCH SOURCES & BASE PAPERS:\n{search_context}\n\n"
             "CRITICAL INSTRUCTIONS FOR DEPTH & COMPREHENSIVENESS:\n"
